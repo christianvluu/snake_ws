@@ -8,14 +8,13 @@ Special thanks to the [HEBI Robotics](http://hebirobotics.com/) team for providi
 ## Necessary Packages 
 
 Python SciPy:
-'''
+```
 $ sudo apt-get install python-scipy
-'''
-
+```
 Gazebo Effort Controllers:
-''' 
+```
 $ sudo apt-get install ros-kinetic-effort-controllers
-''' 
+```
 
 ## Build and source the workspace
 
