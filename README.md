@@ -5,6 +5,17 @@ Tested with __ROS Kinetic__ and __Ubuntu 16.04__
 
 Special thanks to the [HEBI Robotics](http://hebirobotics.com/) team for providing the meshes and URDF files for their modular SEA actuators.  Howie Choset's Biorobotics lab (CMU) used these actutors to construct modular snake and heaxapod robots.  This project builds on HEBI's mesh and URDF files to develop dynamic simulations of each robot to enable testing and experimentation, e.g., of different controllers, in Gazebo.  The project implements several example controllers including a CPG-based walking controller for the SEA hexapod, and a serpenoid gait controller for the snake.
 
+## Necessary Packages 
+
+Python SciPy:
+```
+$ sudo apt-get install python-scipy
+```
+Gazebo Effort Controllers:
+```
+$ sudo apt-get install ros-kinetic-effort-controllers
+```
+
 ## Build and source the workspace
 
 Source ROS if this is not already handled:
@@ -57,3 +68,4 @@ The snake_control and snake_monster_control packages were originally developed a
 ## Contributing
 
 This project is intended to be a simple example and starting point for students to perform simulated control of the robots in CMU's Biorobotics Lab.  If you make changes/improvements, please consider contributing these back to this open-source project so that others may benefit!
+
