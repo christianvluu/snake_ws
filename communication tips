@@ -1,0 +1,20 @@
+...GETTING JOINTS INFO FROM GAZEBO:
+
+	.To get the status of the joints from gazebo,subscribe to the topic "/snake_monster/joints_states" which is being published by "/gazebo" node.
+	
+	.The type of msg being published is "sensor_msgs/JointState": http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html . 
+
+...PUBLISHING TO JOINTS IN GAZEBO:
+
+	.To publish joints command, we have to publish the topic"/snake_monster/Li_j_eff_pos_controller/command" ; where 0<i(leg's number)<7  0<j(module number)<4 ; which publishes a msg of type   		"std_msgs/Float64" through a node called "/walking_controller" .
+
+	.This topic will be subscribed by "/gazebo" node to apply the command to each joints.
+
+
+...LIST OF MODULE NAMES CORRESPONDING TO EACH LEG:
+
+#          		      front
+# 		L6_3 L6_2 L6_1 ### L1_1 L1_2 L1_3
+# 	 	L5_3 L5_2 L5_2 ### L2_1 L2_2 L2_3
+# 	 	L4_3 L4_2 L4_3 ### L3_1 L3_2 L3_3
+#       	           back 

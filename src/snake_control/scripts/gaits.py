@@ -35,16 +35,16 @@ class JointCmds:
 
         ## sidewinding gait ##
         # spatial frequency
-        spat_freq = 0.08
+        spat_freq = 0.6
         
         # temporal phase offset between horizontal and vertical waves
-        TPO = 3.0/8.0
+        TPO = 2.0/8.0
 
         # amplitude
-        A = 0.38*np.pi/2.0
+        A = 2*np.pi/2.0
 
         # direction
-        d = 1
+        d = -1
 
         # if even
             # command = A*sin( 2.0*np.pi*(d*t + module_index*spat_freq) )

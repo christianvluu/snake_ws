@@ -50,9 +50,9 @@ class JointCmds:
         self.jnt_cmd_dict['L1_1'] -= \
             .45*(np.cos(np.arctan2(y[1],x[1])+np.pi)+1)
         self.jnt_cmd_dict['L4_1'] += \
-            .3*(np.cos(np.arctan2(y[2],x[2])+np.pi)+1)
+            .45*(np.cos(np.arctan2(y[2],x[2])+np.pi)+1)
         self.jnt_cmd_dict['L3_1'] -= \
-            .3*(np.cos(np.arctan2(y[3],x[3])+np.pi)+1)
+            .45*(np.cos(np.arctan2(y[3],x[3])+np.pi)+1)
 
         for jnt in self.group_joints[2] :
             self.jnt_cmd_dict[jnt] = 1.57

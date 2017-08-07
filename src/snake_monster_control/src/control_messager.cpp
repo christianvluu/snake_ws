@@ -45,13 +45,14 @@ int main(int argc, char **argv)
     ("/snake_monster/L6_3_eff_pos_controller/command", 100);
 
   ros::Rate loop_rate(200);
-
+  int i=0;
   while (ros::ok())
   {
     std_msgs::Float64 msg;
 
-    msg.data = 0;// sin( ros::Time::now().toSec() );
 
+    msg.data = 50+i;// sin( ros::Time::now().toSec() );
+    i++;
     L1_1_pub.publish(msg);
     L1_2_pub.publish(msg);
     L1_3_pub.publish(msg);
