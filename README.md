@@ -15,6 +15,11 @@ Gazebo Effort Controllers:
 ```
 $ sudo apt-get install ros-kinetic-effort-controllers
 ```
+## Add the directory of the worlds and models:
+```
+$ export GAZEBO_RESOURCE_PATH=$GAZEBO_RESOURCE_PATH:~/catkin_ws/src/snake_ws/src/worlds/
+$ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/catkin_ws/src/snake_ws/src/worlds/models/
+```
 
 ## Build and source the workspace
 
@@ -48,6 +53,7 @@ $ roslaunch snake_control gazebo.launch gait:=true paused:=false
 
 ### SEA hexapod
 
+
 Launch the gazebo simulator and ROS control interfaces: 
 ```
 $ roslaunch snake_monster_control gaz_control.launch
@@ -58,6 +64,12 @@ Open a seperate terminal and execute a control script:
 $ cd snake_ws/src/snake_monster_control/scripts
 $ python walking_controller.py
 ```
+or you can just type:
+```
+$ roslaunch snake_monster_control gaz_control.launch walk:=true 
+```
+also you can add __gui:=false__ to the roslaunch command if you want to run the simulation without showing the gui.
+
 
 *If the commands are successful, walking_controller.py should send joint commands that cause the hexapod robot simulation in gazebo to start walking.  The python file publishes desired joint angles and ROS control is used to implement a PD controller to drive the dynamic robot model in tracking these angles.*
 
