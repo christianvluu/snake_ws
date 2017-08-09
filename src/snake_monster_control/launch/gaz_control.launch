@@ -1,8 +1,9 @@
 <launch>
-
+  <arg name="gui" default="true" />	
   <!-- Load gazebo snake monster simulation by calling launch file and use the joint state publisher below instead of the one in this launch file -->
   <include file="$(find snake_monster)/launch/gazebo.launch">
     <arg name="run_state_publisher" value="false" />
+    <arg name="gui" value="$(arg gui)"/>
   </include>
 
   <!-- Load joint controller configurations from YAML file to parameter server -->
@@ -22,6 +23,8 @@
     <node name="walking_controller" pkg="snake_monster_control" type="walking_controller.py" />
   </group>
 
+  <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find snake_monster)/urdf.rviz" />-->	
+  
   <!-- <node name="control_messager" pkg="snake_monster_control" type="control_messager" /> -->
 	  
 </launch>
