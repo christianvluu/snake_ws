@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(snake_control)
 
-set(CMAKE_BUILD_TYPE distribution) # distribution, release, debug
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O2")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -m64 -Wall -Wextra")
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_RULE_MESSAGES OFF)
+
+## unsure if necessry -Evan## one of these interferes with plugins
+#######################################
+# set(CMAKE_BUILD_TYPE distribution) # distribution, release, debug
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O2")
+# set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -m64 -Wall -Wextra")
+# set(CMAKE_VERBOSE_MAKEFILE ON)
+# set(CMAKE_RULE_MESSAGES OFF)
 # set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-Bstatic")
 # set(BUILD_SHARED_LIBS ON)
+########################################
 
 # message("CMAKE_CXX_FLAGS is ${CMAKE_CXX_FLAGS}")
 # message("CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -206,3 +210,16 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+find_package(gazebo REQUIRED)
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+list(APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}")
+
+add_library(world_plugin SHARED world_plugin.cc)
+target_link_libraries(world_plugin ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+
+add_dependencies(world_plugin ${catkin_EXPORTED_TARGETS})
