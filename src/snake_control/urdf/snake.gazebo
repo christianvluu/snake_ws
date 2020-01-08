@@ -52,20 +52,29 @@
     <!--   </plugin> -->
     <!-- </gazebo> -->
 
-    <!-- imu sensor plugin -->
-    <!-- <gazebo> -->
-    <!--   <plugin name="${mod}_ros_imu_sensor" filename="libgazebo_ros_imu.so"> -->
-    <!-- 	<robotNamespace>/snake</robotNamespace> -->
-    <!-- 	<updateRate>200.0</updateRate> -->
-    <!-- 	<gaussianNoise>0.005</gaussianNoise> -->
-    <!-- 	<topicName>sensors/${mod}/imu</topicName> -->
-    <!-- 	<serviceName>sensors/${mod}/imu</serviceName> -->
-    <!-- 	<bodyName>${mod}__OUTPUT_BODY</bodyName> -->
-    <!-- 	<xyzOffset>0 0 0</xyzOffset> -->
-    <!-- 	<rpyOffset>0 0 0</rpyOffset> -->
-    <!--   </plugin> -->
-    <!-- </gazebo> -->
-  </xacro:macro>
+    <!--imu sensor plugin -->
+    <gazebo reference="${mod}__OUTPUT_BODY"> 
+      <gravity>true</gravity>
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="${mod}_ros_imu_sensor">
+          <robotNamespace>/snake</robotNamespace> 
+          <topicName>sensors/${mod}/imu</topicName> 
+          <serviceName>sensors/${mod}/imu</serviceName> 
+          <bodyName>${mod}__OUTPUT_BODY</bodyName> 
+          <updateRateHZ>200.0</updateRateHZ>
+          <gaussianNoise>0.005</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>imu_link</frameName>
+        </plugin>
+        <pose>0 0 0 0 0 0</pose>
+      </sensor>
+    </gazebo> 
+   </xacro:macro>
 
 
   <xacro:gazeboColor mod="${S_00}"/>
