@@ -42,10 +42,17 @@
   <!-- base body -->
   <link name="base" />
 
+  <!--
   <joint name = "base_to_camera" type="fixed">
     <parent link="base" />
     <child link="camera_link" />
     <origin xyz="0 0 0" rpy="0 ${-PI/2} 0"/>
+  </joint>
+  -->
+  <joint name = "base_to_camera" type="fixed">
+    <parent link="base" />
+    <child link="camera_link" />
+    <origin xyz="0 0 0" rpy="0 ${-PI/2} ${PI/2}"/>
   </joint>
 
   <link name="camera_link"/>
