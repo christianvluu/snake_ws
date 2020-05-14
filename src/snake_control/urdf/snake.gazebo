@@ -22,7 +22,7 @@
         </noise>
       </camera>
       <camera name="right">
-        <pose>0 -0.5 0 0 0 0</pose>
+        <pose>0 -0.07 0 0 0 0</pose>
         <horizontal_fov>1.3962634</horizontal_fov>
         <image>
           <width>800</width>
@@ -46,7 +46,7 @@
         <imageTopicName>image_raw</imageTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <frameName>camera_link_optical</frameName>
-        <hackBaseline>0.5</hackBaseline>
+        <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
         <distortionK3>0.0</distortionK3>
