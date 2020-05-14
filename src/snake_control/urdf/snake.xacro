@@ -8,6 +8,7 @@
   <!-- load macros for modules -->
   <xacro:include filename="./module_common.xacro"/>
   <xacro:include filename="./rotary_module.xacro"/>
+  <xacro:include filename="./realsense-RS200.macro.xacro"/>
   
 
   <!-- ************************* ROBOT DEFINITION ************************* -->
@@ -28,27 +29,34 @@
   <xacro:property name="S_14" value="SA015__MoJo" />
   <xacro:property name="S_15" value="SA016__MoJo" />
 
-  
+  <!-- Import all Gazebo-customization elements -->
+  <xacro:include filename="./snake.gazebo" />
+
   <link name="kdl_dummy_root" />
   <joint name="kdl_dummy_root_to_base" type="fixed">
     <parent link="kdl_dummy_root"/>
     <child link="base"/>
-    <origin xyz="0 0 0" rpy="0 ${-PI/2.0} 0"/>
+    <origin xyz="0 0 0" rpy="0 -${PI/2} 0"/>
   </joint>
 
   <!-- base body -->
   <link name="base" />
 
+  <joint name = "base_to_camera" type="fixed">
+    <parent link="base" />
+    <child link="camera_link" />
+    <origin xyz="0 0 0" rpy="0 ${-PI/2} 0"/>
+  </joint>
+
+  <link name="camera_link"/>
+
   <!-- leg outputs on the base -->
   <joint name="head__OUTPUT_INTERFACE" type="fixed">
     <parent link="base"/>
     <child link="${S_00}__INPUT_INTERFACE"/>
-    <!-- <origin xyz="${width/2} ${leg_y_offset} ${height/2}" rpy="-${PI/2} 0 -${PI/2}"/> -->
+    <origin xyz="0 0 0" rpy="0 0 -${PI/2}"/> -->
   </joint>
 
-  <!-- Import all Gazebo-customization elements -->
-  <xacro:include filename="./snake.gazebo" />
-  
   <xacro:rotary_module joint="${S_00}" child="${S_01}"/>
   <xacro:rotary_module joint="${S_01}" child="${S_02}"/>
   <xacro:rotary_module joint="${S_02}" child="${S_03}"/>

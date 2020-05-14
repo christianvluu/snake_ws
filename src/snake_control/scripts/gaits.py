@@ -35,24 +35,43 @@ class JointCmds:
 
         ## sidewinding gait ##
         # spatial frequency
-        spat_freq = 0.08
+        spat_freq = np.pi/4
         
         # temporal phase offset between horizontal and vertical waves
-        TPO = 3.0/8.0
+        TPO = np.pi/4
 
         # amplitude
-        A = 0.38*np.pi/2.0
+        A_even = 1
+        A_odd = 0.7
 
         # direction
-        d = 1
+        d = 3
 
-        # if even
-            # command = A*sin( 2.0*np.pi*(d*t + module_index*spat_freq) )
-        # if odd
-            # command = A*sin( 2.0*np.pi*(d*t + TPO + module_index*spat_freq) )
+        ## rolling gait ##
+        '''
+        spat_freq = 0
+        TPO = np.pi/2
+        A_even = 0.25
+        A_odd - 0.25
+        d = 0.5
+        '''
 
         for i, jnt in enumerate(self.joints_list) :
-            self.jnt_cmd_dict[jnt] = A*np.sin( 2.0*np.pi*(d*self.t + (i%2)*TPO + i*spat_freq) )
+            # Wait 10 seconds before moving the snake
+            if self.t < 10:
+                if i%2 == 0:
+                    self.jnt_cmd_dict[jnt] = A_even*np.sin( (i%2)*TPO + i*spat_freq )
+                if i%2 == 1:
+                    self.jnt_cmd_dict[jnt] = A_odd*np.sin( (i%2)*TPO + i*spat_freq )
+            else:
+                if i%2 == 0:
+                    self.jnt_cmd_dict[jnt] = A_even*np.sin( d*(self.t - 10) + (i%2)*TPO + i*spat_freq )
+                if i%2 == 1:
+                    self.jnt_cmd_dict[jnt] = A_odd*np.sin( d*(self.t - 10) + (i%2)*TPO + i*spat_freq )
+
+            # Account for spiraling
+            if i%4 > 1:
+                self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
                 
         return self.jnt_cmd_dict
 
