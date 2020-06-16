@@ -8,7 +8,6 @@
   <!-- load macros for modules -->
   <xacro:include filename="./module_common.xacro"/>
   <xacro:include filename="./rotary_module.xacro"/>
-  <xacro:include filename="./realsense-RS200.macro.xacro"/>
   
 
   <!-- ************************* ROBOT DEFINITION ************************* -->
