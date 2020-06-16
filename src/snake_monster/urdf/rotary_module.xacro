@@ -10,7 +10,7 @@
       <visual>
 	<origin xyz="0 0 -0.035" rpy="-1.57075 0 0" />
         <geometry>
-          <mesh filename="package://reusnake_visualize/meshes/rotary_input.stl"/>
+          <mesh filename="package://snake_monster/meshes/rotary_input.stl"/>
         </geometry>
         <xacro:red_material/>
       </visual>
@@ -57,7 +57,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="-1.57075 0 0" />
         <geometry>
-          <mesh filename="package://reusnake_visualize/meshes/rotary_output.stl"/>
+          <mesh filename="package://snake_monster/meshes/rotary_output.stl"/>
 	  <!-- <cylinder radius=".0025" length=".1" /> -->
         </geometry>
         <xacro:red_material/>
