@@ -1,0 +1,2 @@
+gazebo_ros_control:snake_control:snake_monster:snake_monster_control
+-DCATKIN_DEVEL_PREFIX=/home/christianluu/snake_ws/devel -DCMAKE_INSTALL_PREFIX=/home/christianluu/snake_ws/install -G Unix Makefiles

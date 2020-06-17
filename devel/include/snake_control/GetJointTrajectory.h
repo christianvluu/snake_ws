@@ -57,8 +57,8 @@ struct DataType< ::snake_control::GetJointTrajectory > {
 };
 
 
-// service_traits::MD5Sum< ::snake_control::GetJointTrajectoryRequest> should match 
-// service_traits::MD5Sum< ::snake_control::GetJointTrajectory > 
+// service_traits::MD5Sum< ::snake_control::GetJointTrajectoryRequest> should match
+// service_traits::MD5Sum< ::snake_control::GetJointTrajectory >
 template<>
 struct MD5Sum< ::snake_control::GetJointTrajectoryRequest>
 {
@@ -72,8 +72,8 @@ struct MD5Sum< ::snake_control::GetJointTrajectoryRequest>
   }
 };
 
-// service_traits::DataType< ::snake_control::GetJointTrajectoryRequest> should match 
-// service_traits::DataType< ::snake_control::GetJointTrajectory > 
+// service_traits::DataType< ::snake_control::GetJointTrajectoryRequest> should match
+// service_traits::DataType< ::snake_control::GetJointTrajectory >
 template<>
 struct DataType< ::snake_control::GetJointTrajectoryRequest>
 {
@@ -87,8 +87,8 @@ struct DataType< ::snake_control::GetJointTrajectoryRequest>
   }
 };
 
-// service_traits::MD5Sum< ::snake_control::GetJointTrajectoryResponse> should match 
-// service_traits::MD5Sum< ::snake_control::GetJointTrajectory > 
+// service_traits::MD5Sum< ::snake_control::GetJointTrajectoryResponse> should match
+// service_traits::MD5Sum< ::snake_control::GetJointTrajectory >
 template<>
 struct MD5Sum< ::snake_control::GetJointTrajectoryResponse>
 {
@@ -102,8 +102,8 @@ struct MD5Sum< ::snake_control::GetJointTrajectoryResponse>
   }
 };
 
-// service_traits::DataType< ::snake_control::GetJointTrajectoryResponse> should match 
-// service_traits::DataType< ::snake_control::GetJointTrajectory > 
+// service_traits::DataType< ::snake_control::GetJointTrajectoryResponse> should match
+// service_traits::DataType< ::snake_control::GetJointTrajectory >
 template<>
 struct DataType< ::snake_control::GetJointTrajectoryResponse>
 {

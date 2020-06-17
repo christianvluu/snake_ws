@@ -1,0 +1,8 @@
+prefix=/home/christianluu/snake_ws/install
+
+Name: snake_monster
+Description: Description of snake_monster
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

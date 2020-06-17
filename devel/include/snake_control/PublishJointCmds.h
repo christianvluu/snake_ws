@@ -57,8 +57,8 @@ struct DataType< ::snake_control::PublishJointCmds > {
 };
 
 
-// service_traits::MD5Sum< ::snake_control::PublishJointCmdsRequest> should match 
-// service_traits::MD5Sum< ::snake_control::PublishJointCmds > 
+// service_traits::MD5Sum< ::snake_control::PublishJointCmdsRequest> should match
+// service_traits::MD5Sum< ::snake_control::PublishJointCmds >
 template<>
 struct MD5Sum< ::snake_control::PublishJointCmdsRequest>
 {
@@ -72,8 +72,8 @@ struct MD5Sum< ::snake_control::PublishJointCmdsRequest>
   }
 };
 
-// service_traits::DataType< ::snake_control::PublishJointCmdsRequest> should match 
-// service_traits::DataType< ::snake_control::PublishJointCmds > 
+// service_traits::DataType< ::snake_control::PublishJointCmdsRequest> should match
+// service_traits::DataType< ::snake_control::PublishJointCmds >
 template<>
 struct DataType< ::snake_control::PublishJointCmdsRequest>
 {
@@ -87,8 +87,8 @@ struct DataType< ::snake_control::PublishJointCmdsRequest>
   }
 };
 
-// service_traits::MD5Sum< ::snake_control::PublishJointCmdsResponse> should match 
-// service_traits::MD5Sum< ::snake_control::PublishJointCmds > 
+// service_traits::MD5Sum< ::snake_control::PublishJointCmdsResponse> should match
+// service_traits::MD5Sum< ::snake_control::PublishJointCmds >
 template<>
 struct MD5Sum< ::snake_control::PublishJointCmdsResponse>
 {
@@ -102,8 +102,8 @@ struct MD5Sum< ::snake_control::PublishJointCmdsResponse>
   }
 };
 
-// service_traits::DataType< ::snake_control::PublishJointCmdsResponse> should match 
-// service_traits::DataType< ::snake_control::PublishJointCmds > 
+// service_traits::DataType< ::snake_control::PublishJointCmdsResponse> should match
+// service_traits::DataType< ::snake_control::PublishJointCmds >
 template<>
 struct DataType< ::snake_control::PublishJointCmdsResponse>
 {

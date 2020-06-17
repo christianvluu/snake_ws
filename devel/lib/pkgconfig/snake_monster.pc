@@ -1,8 +1,8 @@
-prefix=/home/alex/Documents/CMU/projects/snake_ws_2/devel
+prefix=/home/christianluu/snake_ws/devel
 
 Name: snake_monster
 Description: Description of snake_monster
 Version: 0.0.0
 Cflags: 
-Libs: -L/home/alex/Documents/CMU/projects/snake_ws_2/devel/lib 
+Libs: -L${prefix}/lib 
 Requires: 
