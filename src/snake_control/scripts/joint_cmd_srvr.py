@@ -26,7 +26,7 @@ class JointCmds:
         self.jnt_cmd_dict = {}
         self.default_cmd_params = [0.38*np.pi/2.0, 3.0/8.0, 0.08]
         self.t = 0.0
-          
+        
 
     def update( self, dt, cmd_params=None ) :
         """ Publishes snake joint commands for tracking with PID controller
@@ -70,7 +70,7 @@ class JointCmdSrvr :
     
     def __init__(self):
         
-        rospy.init_node('joint_cmd_srvr')
+        rospy.init_node('joint_cmd_srvr') # this is the name of the node
 
         self.pub={}
         ns_str='/snake'
@@ -80,7 +80,7 @@ class JointCmdSrvr :
         for jnt in self.joint_cmds.modules_dict.keys():
             self.pub[jnt] = rospy.Publisher( ns_str + '/' + jnt + '_'
                                              + cont_str + '/command',
-                                             Float64, queue_size=10 )
+                                             Float64, queue_size=10 ) # there are many topics with different names, type Float64
         
         s = rospy.Service('/snake/publish_joint_commands',
                           PublishJointCmds, self.publish_joint_commands)

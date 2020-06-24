@@ -32,49 +32,65 @@ class JointCmds:
     def update( self, dt ) :
 
         self.t += dt
-
-        ## sidewinding gait ##
-        # spatial frequency
-        spat_freq = np.pi/4
-        
-        # temporal phase offset between horizontal and vertical waves
-        TPO = np.pi/4
-
-        # amplitude
-        A_even = 1
-        A_odd = 0.7
-
-        # direction
-        d = 3
-
         ## rolling gait ##
-        '''
-        spat_freq = 0
-        TPO = np.pi/2
-        A_even = 0.25
-        A_odd - 0.25
-        d = 0.5
-        '''
+        roll_outwards = True
+        roll_to_positive = True
+        amplitude = 0.2
+        TPF = 3 # temporal frequency
+        if not roll_to_positive:
+            TPF *= -1
+        
+        if roll_outwards:
+            TPF *= -1
+        
 
         for i, jnt in enumerate(self.joints_list) :
-            # Wait 10 seconds before moving the snake
-            if self.t < 10:
+            #Wait 5 seconds before moving the snake
+            if self.t < 5:
                 if i%2 == 0:
-                    self.jnt_cmd_dict[jnt] = A_even*np.sin( (i%2)*TPO + i*spat_freq )
+                    self.jnt_cmd_dict[jnt] = 0 #amplitude*np.sin(TPO)
                 if i%2 == 1:
-                    self.jnt_cmd_dict[jnt] = A_odd*np.sin( (i%2)*TPO + i*spat_freq )
-            else:
+                    self.jnt_cmd_dict[jnt] = 0
+            if self.t > 5:
                 if i%2 == 0:
-                    self.jnt_cmd_dict[jnt] = A_even*np.sin( d*(self.t - 10) + (i%2)*TPO + i*spat_freq )
+                    self.jnt_cmd_dict[jnt] = amplitude*np.sin( TPF*(self.t - 5))
                 if i%2 == 1:
-                    self.jnt_cmd_dict[jnt] = A_odd*np.sin( d*(self.t - 10) + (i%2)*TPO + i*spat_freq )
+                    self.jnt_cmd_dict[jnt] = amplitude*np.cos( TPF*(self.t - 5) + roll_outwards*np.pi)
 
             # Account for spiraling
-            if i%4 > 1:
+            if i%4 == 1:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
-                
+            if i%4 == 2:
+                self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
+        print(self.jnt_cmd_dict)
+        
+        
+        # if round(self.t) == 2:
+        #     self.jnt_cmd_dict["S_00"] = np.pi/4
+        # elif round(self.t) == 4:
+        #     self.jnt_cmd_dict["S_01"] = 0
+        # elif round(self.t) == 6:
+        #     self.jnt_cmd_dict["S_02"] = -np.pi/4
+        # elif round(self.t) == 8:
+        #     self.jnt_cmd_dict["S_03"] = 0
+        # elif round(self.t) == 10:
+        #     self.jnt_cmd_dict["S_04"] = np.pi/4
+        # elif round(self.t) == 12:
+        #     self.jnt_cmd_dict["S_05"] = 0
+        # elif round(self.t) == 14:
+        #     self.jnt_cmd_dict["S_06"] = -np.pi/4
+        
+        # for i, joint in enumerate(self.joints_list):
+        #     if i%4 == 0:
+        #         self.jnt_cmd_dict[joint] = np.pi/3
+        #     elif i%2 == 0:
+        #         self.jnt_cmd_dict[joint] = -np.pi/3
+        #     else:
+        #         self.jnt_cmd_dict[joint] = 0
+        
         return self.jnt_cmd_dict
 
+        
 
 def publish_commands( num_modules, hz ):
     pub={}
@@ -97,6 +113,10 @@ def publish_commands( num_modules, hz ):
         for jnt in jnt_cmd_dict.keys() :
             pub[jnt].publish( jnt_cmd_dict[jnt] )
         rate.sleep()
+
+"""class DebugPublisher:
+    def __init__(self, debug_name = "Debug1"):
+        rospy.Publisher(debug_name, String, queue_size=10)"""
 
 
 if __name__ == "__main__":
