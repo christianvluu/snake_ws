@@ -33,8 +33,11 @@ class JointCmds:
 
         self.t += dt
 
-        for joint in self.joints_list:
-            self.jnt_cmd_dict[joint] = 0
+        for i, joint in enumerate(self.joints_list):
+            if i%2 == 1:
+                self.jnt_cmd_dict[joint] = np.pi/4
+            else:
+                self.jnt_cmd_dict[joint] = np.pi/6
 
         return self.jnt_cmd_dict
 

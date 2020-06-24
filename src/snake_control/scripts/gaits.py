@@ -33,9 +33,11 @@ class JointCmds:
 
         self.t += dt
         ## rolling gait ##
-        roll_outwards = True
+        roll_outwards = False
         roll_to_positive = True
         amplitude = 0.2
+        
+        print("Amplitude = ", amplitude, "Time = ", self.t-5)
         TPF = 3 # temporal frequency
         if not roll_to_positive:
             TPF *= -1
@@ -48,7 +50,7 @@ class JointCmds:
             #Wait 5 seconds before moving the snake
             if self.t < 5:
                 if i%2 == 0:
-                    self.jnt_cmd_dict[jnt] = 0 #amplitude*np.sin(TPO)
+                    self.jnt_cmd_dict[jnt] = 0
                 if i%2 == 1:
                     self.jnt_cmd_dict[jnt] = 0
             if self.t > 5:
@@ -62,7 +64,6 @@ class JointCmds:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
             if i%4 == 2:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
-        print(self.jnt_cmd_dict)
         
         
         # if round(self.t) == 2:
