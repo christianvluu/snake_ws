@@ -32,6 +32,37 @@ class JointCmds:
     def update( self, dt ) :
 
         self.t += dt
+        for i, joint in enumerate(self.joints_list):
+            if (i%2 == 0):
+                self.jnt_cmd_dict[joint] = np.pi/3
+                if (i%4 == 0):
+                    self.jnt_cmd_dict[joint] *= -1
+        
+        # if round(self.t) == 2:
+        #     self.jnt_cmd_dict["S_00"] = np.pi/4
+        # elif round(self.t) == 4:
+        #     self.jnt_cmd_dict["S_01"] = 0
+        # elif round(self.t) == 6:
+        #     self.jnt_cmd_dict["S_02"] = -np.pi/4
+        # elif round(self.t) == 8:
+        #     self.jnt_cmd_dict["S_03"] = 0
+        # elif round(self.t) == 10:
+        #     self.jnt_cmd_dict["S_04"] = np.pi/4
+        # elif round(self.t) == 12:
+        #     self.jnt_cmd_dict["S_05"] = 0
+        # elif round(self.t) == 14:
+        #     self.jnt_cmd_dict["S_06"] = -np.pi/4
+        
+        # for i, joint in enumerate(self.joints_list):
+        #     if i%4 == 0:
+        #         self.jnt_cmd_dict[joint] = np.pi/3
+        #     elif i%2 == 0:
+        #         self.jnt_cmd_dict[joint] = -np.pi/3
+        #     else:
+        #         self.jnt_cmd_dict[joint] = 0
+        
+        return self.jnt_cmd_dict
+    def rolling_gait(self):
         ## rolling gait ##
         roll_outwards = False
         roll_to_positive = True
@@ -64,33 +95,6 @@ class JointCmds:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
             if i%4 == 2:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
-        
-        
-        # if round(self.t) == 2:
-        #     self.jnt_cmd_dict["S_00"] = np.pi/4
-        # elif round(self.t) == 4:
-        #     self.jnt_cmd_dict["S_01"] = 0
-        # elif round(self.t) == 6:
-        #     self.jnt_cmd_dict["S_02"] = -np.pi/4
-        # elif round(self.t) == 8:
-        #     self.jnt_cmd_dict["S_03"] = 0
-        # elif round(self.t) == 10:
-        #     self.jnt_cmd_dict["S_04"] = np.pi/4
-        # elif round(self.t) == 12:
-        #     self.jnt_cmd_dict["S_05"] = 0
-        # elif round(self.t) == 14:
-        #     self.jnt_cmd_dict["S_06"] = -np.pi/4
-        
-        # for i, joint in enumerate(self.joints_list):
-        #     if i%4 == 0:
-        #         self.jnt_cmd_dict[joint] = np.pi/3
-        #     elif i%2 == 0:
-        #         self.jnt_cmd_dict[joint] = -np.pi/3
-        #     else:
-        #         self.jnt_cmd_dict[joint] = 0
-        
-        return self.jnt_cmd_dict
-
         
 
 def publish_commands( num_modules, hz ):
