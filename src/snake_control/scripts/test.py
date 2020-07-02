@@ -18,10 +18,10 @@ def draw(x_data, y_data):
 def callback(data):
     effort_list = list(data.effort)
     efforts_0.append(effort_list[6])
-    draw(x_data, efforts_0)
+    #draw(x_data, efforts_0)
     
-    # for i, effort in enumerate(effort_list):
-    #     print str(i) + ": " + str(round(data.effort[i], 4)) # extract efforts of joints
+    for i, effort in enumerate(effort_list):
+        print str(i) + ": " + str(round(data.effort[i], 4)) # extract efforts of joints
     
     
 def listener():

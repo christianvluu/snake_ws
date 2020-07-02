@@ -7,6 +7,7 @@ with the appropriate robot hardware interface.
 
 import rospy
 from std_msgs.msg import Float64
+from sensor_msgs.msg import JointState
 
 import numpy as np
 
@@ -28,47 +29,14 @@ class JointCmds:
             else :
                 leg_str += str(i)
             self.joints_list += [leg_str]
-
-    def update( self, dt ) :
-
-        self.t += dt
-        for i, joint in enumerate(self.joints_list):
-            if (i%2 == 0):
-                self.jnt_cmd_dict[joint] = np.pi/3
-                if (i%4 == 0):
-                    self.jnt_cmd_dict[joint] *= -1
-        
-        # if round(self.t) == 2:
-        #     self.jnt_cmd_dict["S_00"] = np.pi/4
-        # elif round(self.t) == 4:
-        #     self.jnt_cmd_dict["S_01"] = 0
-        # elif round(self.t) == 6:
-        #     self.jnt_cmd_dict["S_02"] = -np.pi/4
-        # elif round(self.t) == 8:
-        #     self.jnt_cmd_dict["S_03"] = 0
-        # elif round(self.t) == 10:
-        #     self.jnt_cmd_dict["S_04"] = np.pi/4
-        # elif round(self.t) == 12:
-        #     self.jnt_cmd_dict["S_05"] = 0
-        # elif round(self.t) == 14:
-        #     self.jnt_cmd_dict["S_06"] = -np.pi/4
-        
-        # for i, joint in enumerate(self.joints_list):
-        #     if i%4 == 0:
-        #         self.jnt_cmd_dict[joint] = np.pi/3
-        #     elif i%2 == 0:
-        #         self.jnt_cmd_dict[joint] = -np.pi/3
-        #     else:
-        #         self.jnt_cmd_dict[joint] = 0
-        
-        return self.jnt_cmd_dict
+    
     def rolling_gait(self):
         ## rolling gait ##
         roll_outwards = False
         roll_to_positive = True
         amplitude = 0.2
         
-        print("Amplitude = ", amplitude, "Time = ", self.t-5)
+        #print("Amplitude = ", amplitude, "Time = ", self.t-5)
         TPF = 3 # temporal frequency
         if not roll_to_positive:
             TPF *= -1
@@ -95,7 +63,51 @@ class JointCmds:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
             if i%4 == 2:
                 self.jnt_cmd_dict[jnt] = -self.jnt_cmd_dict[jnt]
+
+    def update( self, dt ) :
+
+        self.t += dt
+        self.rolling_gait()
+        # for i, joint in enumerate(self.joints_list):
+        #     if (i%2 == 0):
+        #         self.jnt_cmd_dict[joint] = np.pi/4
+        #         if (i%4 == 0):
+        #             self.jnt_cmd_dict[joint] *= -1
         
+        # if round(self.t) == 2:
+        #     self.jnt_cmd_dict["S_00"] = np.pi/4
+        # elif round(self.t) == 4:
+        #     self.jnt_cmd_dict["S_01"] = 0
+        # elif round(self.t) == 6:
+        #     self.jnt_cmd_dict["S_02"] = -np.pi/4
+        # elif round(self.t) == 8:
+        #     self.jnt_cmd_dict["S_03"] = 0
+        # elif round(self.t) == 10:
+        #     self.jnt_cmd_dict["S_04"] = np.pi/4
+        # elif round(self.t) == 12:
+        #     self.jnt_cmd_dict["S_05"] = 0
+        # elif round(self.t) == 14:
+        #     self.jnt_cmd_dict["S_06"] = -np.pi/4
+        
+        # for i, joint in enumerate(self.joints_list):
+        #     if i%4 == 0:
+        #         self.jnt_cmd_dict[joint] = np.pi/3
+        #     elif i%2 == 0:
+        #         self.jnt_cmd_dict[joint] = -np.pi/3
+        #     else:
+        #         self.jnt_cmd_dict[joint] = 0
+        
+        return self.jnt_cmd_dict
+    
+class JntStates:
+    def init(self):
+        rospy.init_node('join_state_listener', anonymous=True)
+        rospy.Subscriber("/snake/joint_states", JointState, self.callback)
+        rospy.spin()
+    
+    def callback(self, data):
+        effort_list = list(data.effort)
+        print(effort_list)
 
 def publish_commands( num_modules, hz ):
     pub={}
@@ -128,6 +140,7 @@ if __name__ == "__main__":
     try:
         num_modules = 16        
         hz = 100
+        jntStates = JntStates()
         publish_commands( num_modules, hz )
     except rospy.ROSInterruptException:
         pass
