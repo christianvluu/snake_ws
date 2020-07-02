@@ -3,6 +3,7 @@ import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
 import numpy as np
+import math
 
 class JointCmds: # dictionary mapping to joint position values
     def __init__(self, num_modules):
@@ -66,6 +67,47 @@ class SnakeControl:
             rate.sleep()
 
     def make_gait(self):
+        # self.wraparound()
+        for i, joint in enumerate(self.next_cmds.joints_list):
+            self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb(i)
+        self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
+    
+    def helix_climb(self, i):
+        m = 0.05 # length of module
+        r = 0.2 # radius
+        p = 0.2 # pitch
+        s = 4*np.pi # arc length
+        k = r/(r**2 + p**2) # curvature
+        t = p/(r**2 + p**2) # torsion
+        k_cos = k*math.cos(t*s)
+        k_sin = k*math.sin(t*s)
+        A = (2*k/t)*math.sin(t*m)
+        alpha_cos = A*math.cos(self.t + t*m*i) # m = length of module; i = index of joint
+        alpha_sin = A*math.sin(self.t + t*m*i)
+        # if (i%4 == 1 or i%4 == 2):
+        #     alpha_cos *= -1
+        #     alpha_sin *= -1
+        if (i%2 == 0):
+            return alpha_cos
+        else:
+            return alpha_sin
+    
+    def rolling(self, i):
+        m = 0.05 # length of module
+        r = 0.7 # radius
+        p = 0.2 # pitch
+        A = (2*m/r)
+        alpha_cos = A*math.cos(-5*self.t) # m = length of module; i = index of joint
+        alpha_sin = A*math.sin(-5*self.t)
+        if (i%4 == 1 or i%4 == 2):
+            alpha_cos *= -1
+            alpha_sin *= -1
+        if (i%2 == 0):
+            return alpha_cos
+        else:
+            return alpha_sin
+
+    def wraparound(self): # this wraps snake around a pole
         average_effort = 0
         for effort in self.sensor_efforts:
             average_effort += abs(effort)
@@ -78,7 +120,7 @@ class SnakeControl:
                     self.next_cmds.jnt_cmd_dict[joint] = np.pi/4
                     if ((i+1)%4 == 0):
                         self.next_cmds.jnt_cmd_dict[joint] *= -1
-        self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
+        
 
 
     def curl_to_size(self, size):
@@ -93,8 +135,6 @@ class SnakeControl:
     
     def call_joint_velocities(self, data):
         self.sensor_velocities = list(data.velocity)
-
-
 
 
 if __name__ == '__main__':
