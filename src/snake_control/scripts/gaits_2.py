@@ -70,23 +70,24 @@ class SnakeControl:
         # self.wraparound()
         for i, joint in enumerate(self.next_cmds.joints_list):
             self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb(i)
+            print str(i) + " angle: " + str(self.next_cmds.jnt_cmd_dict[joint])
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
     
     def helix_climb(self, i):
-        m = 0.05 # length of module
-        r = 0.2 # radius
-        p = 0.2 # pitch
-        s = 4*np.pi # arc length
+        m = 0.4 # length of module
+        r = 1.0 # radius
+        p = 1.5 # pitch
+        # s = i * m # arc length
         k = r/(r**2 + p**2) # curvature
         t = p/(r**2 + p**2) # torsion
-        k_cos = k*math.cos(t*s)
-        k_sin = k*math.sin(t*s)
+        # k_cos = k*math.cos(t*s)
+        # k_sin = k*math.sin(t*s)
         A = (2*k/t)*math.sin(t*m)
-        alpha_cos = A*math.cos(self.t + t*m*i) # m = length of module; i = index of joint
-        alpha_sin = A*math.sin(self.t + t*m*i)
-        # if (i%4 == 1 or i%4 == 2):
-        #     alpha_cos *= -1
-        #     alpha_sin *= -1
+        alpha_cos = 10*A*math.cos(self.t + t*m*i) # m = length of module; i = index of joint
+        alpha_sin = 10*A*math.sin(self.t + t*m*i)
+        if (i%4 == 1 or i%4 == 2):
+            alpha_cos *= -1
+            alpha_sin *= -1
         if (i%2 == 0):
             return alpha_cos
         else:
@@ -94,15 +95,15 @@ class SnakeControl:
     
     def rolling(self, i):
         m = 0.05 # length of module
-        r = 0.7 # radius
+        r = 0.8 # radius
         p = 0.2 # pitch
         A = (2*m/r)
-        alpha_cos = A*math.cos(-5*self.t) # m = length of module; i = index of joint
-        alpha_sin = A*math.sin(-5*self.t)
+        alpha_cos = A*math.cos(5*self.t) # m = length of module; i = index of joint
+        alpha_sin = A*math.sin(5*self.t)
         if (i%4 == 1 or i%4 == 2):
             alpha_cos *= -1
             alpha_sin *= -1
-        if (i%2 == 0):
+        if (i%2 == 1): ## SET REMAINDER TO 1 OR 0 TO FLIP ORIENTATION
             return alpha_cos
         else:
             return alpha_sin
