@@ -83,8 +83,8 @@ class SnakeControl:
         # k_cos = k*math.cos(t*s)
         # k_sin = k*math.sin(t*s)
         A = (2*k/t)*math.sin(t*m)
-        alpha_cos = 10*A*math.cos(self.t + t*m*i) # m = length of module; i = index of joint
-        alpha_sin = 10*A*math.sin(self.t + t*m*i)
+        alpha_cos = 5*A*math.cos(3*self.t + t*m*i) # m = length of module; i = index of joint
+        alpha_sin = 5*A*math.sin(3*self.t + t*m*i)
         if (i%4 == 1 or i%4 == 2):
             alpha_cos *= -1
             alpha_sin *= -1
