@@ -2,13 +2,14 @@
 <sdf version="1.5">
   <world name="default">
     <include>
-      <uri>model://ground_plane</uri>
-    </include>
-    <include>
       <uri>model://sun</uri>
     </include>
     <include>
-      <uri>model://willowgarage</uri>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <pose>1 1 0 0 0 0</pose>
+      <uri>model://vluu_pole</uri>
     </include>
   </world>
 </sdf>
