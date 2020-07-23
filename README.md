@@ -28,6 +28,7 @@ $ cd snake_ws
 $ catkin_make
 $ source devel/setup.bash
 ```
+Ensure all default Gazebo models (http://models.gazebosim.org/) are included in ~/.gazebo/models because some of these models may be used.
 
 ## Run example controllers in Gazebo
 
