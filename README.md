@@ -13,14 +13,14 @@ $ sudo apt-get install python-scipy
 ```
 Gazebo Effort Controllers:
 ```
-$ sudo apt-get install ros-kinetic-effort-controllers
+$ sudo apt-get install ros-melodic-ros-control ros-melodic-ros-controllers
 ```
 
 ## Build and source the workspace
 
 Source ROS if this is not already handled:
 ```
-$ source /opt/ros/kinetic/setup.bash
+$ source /opt/ros/melodic/setup.bash
 ```
 Move to the downloaded workspace, build, and source:
 ```
@@ -46,7 +46,7 @@ $ roslaunch snake_control gazebo.launch gait:=true paused:=false
 
 *If the commands are successful, gaits.py should send joint commands that cause the snake robot simulation in gazebo to start sidewinding.  The python file publishes desired joint angles and ROS control is used to implement a PD controller to drive the dynamic robot model in tracking these angles.*
 
-### SEA hexapod
+### SEA hexapod (Depracated)
 
 
 Launch the gazebo simulator and ROS control interfaces: 
@@ -64,7 +64,7 @@ $ python walking_controller.py
 
 ## Acknowledgements
 
-The snake_control and snake_monster_control packages were originally developed and maintained by Alex Ansari while working in Prof. Howie Choset's Biorobotics Lab at Carnegie Mellon University. (The workspace uses model files from [HEBI Robotics](http://hebirobotics.com/) and redistributes the gazebo_ros_control package so the workspace is self-contained.)  You are free to use this code subject to the licensing agreements in each package.  If you do use these packages, please cite and ackowledge source materials.
+The snake_control and snake_monster_control packages were originally developed and maintained by Alex Ansari while working in Prof. Howie Choset's Biorobotics Lab at Carnegie Mellon University. (The workspace uses model files from [HEBI Robotics](http://hebirobotics.com/) and redistributes the gazebo_ros_control package so the workspace is self-contained.) The updates to the workspace for ROS Melodic was done by Anoop Bhat. The Shape-Based Compliance project is worked on by Christian Luu. You are free to use this code subject to the licensing agreements in each package.  If you do use these packages, please cite and ackowledge source materials.
 
 ## Contributing
 
