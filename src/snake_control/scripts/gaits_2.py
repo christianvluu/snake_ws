@@ -31,12 +31,18 @@ class SnakeControl:
         self.t = 0.0
         self.dt = dt
         self.isPaused = False
-        self.sensor_efforts = []
-        self.sensor_velocities = []
+        self.sensor_efforts = [([0] * 1) for i in range(0, num_modules)]
+        self.smoothed_sensor_efforts = [0] * num_modules
+        self.sensor_velocities = [0] * num_modules
         rospy.Subscriber("/snake/joint_states", JointState,
                             self.call_joint_efforts)
         rospy.Subscriber("/snake/joint_states", JointState,
                             self.call_joint_velocities)
+        self.state = "roll_to_pole"
+
+        self.p = 0 # pitch
+        self.r = 0 # radius
+        self.state_change_time = 0.0
         
         pub = {} # one publisher per joint
         ns_str = '/snake'
@@ -61,22 +67,25 @@ class SnakeControl:
                 self.t += dt # keep track of time
                 self.make_gait()
                 # MORE STUFF HERE TO LOOP
-                # self.call_efforts()
-                # self.call_velocity()
+                #print(np.average(self.sensor_efforts))
                 # self.call_IMU()
             rate.sleep()
 
-    def make_gait(self):
+    def make_gait(self): # loop
         # self.wraparound()
+        self.compliance_p_r()
         for i, joint in enumerate(self.next_cmds.joints_list):
             self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb(i)
-            print str(i) + " angle: " + str(self.next_cmds.jnt_cmd_dict[joint])
+            #print str(i) + " angle: " + str(self.next_cmds.jnt_cmd_dict[joint])
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
     
     def helix_climb(self, i):
         m = 0.4 # length of module
-        r = 1.0 # radius
-        p = 1.5 # pitch
+        #r = 1.5 # radius
+        #p = 1.8 # pitch # looks like we should adjust this for radius change
+        # r = 10.0 - self.t*0.5
+        # p = 10.0 - self.t*0.5
+        (p, r) = (self.p, self.r)
         # s = i * m # arc length
         k = r/(r**2 + p**2) # curvature
         t = p/(r**2 + p**2) # torsion
@@ -84,7 +93,7 @@ class SnakeControl:
         # k_sin = k*math.sin(t*s)
         A = (2*k/t)*math.sin(t*m)
         alpha_cos = 5*A*math.cos(3*self.t + t*m*i) # m = length of module; i = index of joint
-        alpha_sin = 5*A*math.sin(3*self.t + t*m*i)
+        alpha_sin = -5*A*math.sin(3*self.t + t*m*i)
         if (i%4 == 1 or i%4 == 2):
             alpha_cos *= -1
             alpha_sin *= -1
@@ -93,6 +102,30 @@ class SnakeControl:
         else:
             return alpha_sin
     
+    def compliance_p_r(self): # compliance function, changes p, r
+        print(self.state, round(self.p, 2), round(self.r, 2), round((self.t - self.state_change_time), 2), round(np.average(self.smoothed_sensor_efforts), 2))
+        self.get_state()
+        if (self.state == "roll_to_pole"):
+            self.p = 8.00
+            self.r = 8.00
+        elif (self.state == "wraparound_pole"):
+            self.p = 8.00 - (self.t - self.state_change_time)*0.4
+            self.r = 8.00 - (self.t - self.state_change_time)*0.4
+        elif (self.state == "climb"):
+            return True
+        return True
+    
+    def get_state(self): # get current state of snake for compliance function
+        if (self.t < 3.0):
+            return True
+        elif ((self.state == "roll_to_pole")
+                and (self.smoothed_sensor_efforts[7]) > 1.4):
+            self.state = "wraparound_pole"
+            self.state_change_time = self.t
+        # elif ((self.state == "wraparound_pole") and ((self.t - self.state_change_time) > 3)
+        #         and abs(self.sensor_efforts[7] > 1.8)):
+        #     self.state = "climb"
+
     def rolling(self, i):
         m = 0.05 # length of module
         r = 0.8 # radius
@@ -132,10 +165,23 @@ class SnakeControl:
                     self.next_cmds.jnt_cmd_dict[joint] *= -1
     
     def call_joint_efforts(self, data):
-        self.sensor_efforts = list(data.effort)
+        for i, effort in enumerate(data.effort):
+            effort = abs(effort)
+            self.sensor_efforts[i].append(effort)
+            self.smoothed_sensor_efforts[i] = running_average_filter(effort, self.sensor_efforts[i], i)
+        #self.sensor_efforts = list(data.effort)
+        #print(self.smoothed_sensor_efforts)
+        return True
     
     def call_joint_velocities(self, data):
         self.sensor_velocities = list(data.velocity)
+        return True
+
+def running_average_filter(new_val, val_list, i, running_count=10):
+    if len(val_list) > running_count and new_val > 0:
+        val_list.pop(1) # remove the front one
+    return np.average(val_list)
+
 
 
 if __name__ == '__main__':
