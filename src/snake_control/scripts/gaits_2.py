@@ -73,13 +73,41 @@ class SnakeControl:
 
     def make_gait(self): # loop
         # self.wraparound()
-        self.compliance_p_r()
         for i, joint in enumerate(self.next_cmds.joints_list):
-            self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb(i)
+            self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb_ruscelli(i)
             #print str(i) + " angle: " + str(self.next_cmds.jnt_cmd_dict[joint])
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
+
+    def helix_climb_ruscelli(self, i): # from Ruscelli compliance paper
+        k = 3 # 10 seems to work       
+        A_lat = 0.15 # amplitude
+        A_dor = A_lat
+        w_s_lat = A_lat * k # spatial frequency, for the curve to helix
+        w_s_dor = w_s_lat
+        w_t_lat = 2 # temporal frequency, curve of snake backbone (circular)
+        w_t_dor = w_t_lat
+        l = 0.07 # length of module
+        s_i = i * l # distances from head of module for module i
+
+        k = w_s_lat/A_lat # factor linking amplitude (A) and spatial freq (w_s)
+        # k = 10 seems to work
+
+        alpha_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
+        alpha_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
+
+        if (i%4 == 1 or i%4 == 2):
+            alpha_dor *= -1
+            alpha_lat *= -1
+        
+        print("k", k)
+
+        if (i%2 == 0):
+            return alpha_dor
+        else:
+            return alpha_lat
     
-    def helix_climb(self, i):
+    def helix_climb_zhen(self, i): # from the "Modelling Rolling Gaits" paper
+        self.compliance_p_r()
         m = 0.4 # length of module
         #r = 1.5 # radius
         #p = 1.8 # pitch # looks like we should adjust this for radius change
@@ -103,7 +131,7 @@ class SnakeControl:
             return alpha_sin
     
     def compliance_p_r(self): # compliance function, changes p, r
-        print(self.state, round(self.p, 2), round(self.r, 2), round((self.t - self.state_change_time), 2), round(np.average(self.smoothed_sensor_efforts), 2))
+        #print(self.state, round(self.p, 2), round(self.r, 2), round((self.t - self.state_change_time), 2), round(np.average(self.smoothed_sensor_efforts), 2))
         self.get_state()
         if (self.state == "roll_to_pole"):
             self.p = 8.00
