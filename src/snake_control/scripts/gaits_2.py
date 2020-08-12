@@ -43,6 +43,9 @@ class SnakeControl:
         self.p = 0 # pitch
         self.r = 0 # radius
         self.state_change_time = 0.0
+
+        self.vel = [[0]]
+        self.A = 0.18
         
         pub = {} # one publisher per joint
         ns_str = '/snake'
@@ -76,11 +79,15 @@ class SnakeControl:
         for i, joint in enumerate(self.next_cmds.joints_list):
             self.next_cmds.jnt_cmd_dict[joint] = self.helix_climb_ruscelli(i)
             #print str(i) + " angle: " + str(self.next_cmds.jnt_cmd_dict[joint])
+        self.compliance()
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
 
-    def helix_climb_ruscelli(self, i): # from Ruscelli compliance paper
+    def helix_climb_ruscelli_with_compliance(self, i): # from Ruscelli compliance paper
+        vel = 0
+
+        ##### NEED TO REWRITE CODE SO THAT ENTIRE MATRIX/ARRAY OF THETA OF SNAKE IS CALCULATED AT ONCE, NOT WHEN WE INPUT IN THIS FUNCITON i
         k = 3 # 10 seems to work       
-        A_lat = 0.15 # amplitude
+        A_lat = 0.18 # amplitude
         A_dor = A_lat
         w_s_lat = A_lat * k # spatial frequency, for the curve to helix
         w_s_dor = w_s_lat
@@ -90,27 +97,80 @@ class SnakeControl:
         s_i = i * l # distances from head of module for module i
 
         k = w_s_lat/A_lat # factor linking amplitude (A) and spatial freq (w_s)
-        # k = 10 seems to work
 
-        alpha_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
-        alpha_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
+        J = np.zeros(self.num_modules)
+        for i1 in range(1, self.num_modules+1):
+            J[i1 - 1] = A_lat*math.sin(w_s_lat*i1*l + w_t_lat*self.t)
+        J = J.reshape(-1, 1)
+        J = J.transpose()
+
+        effort_reshaped = np.array(self.smoothed_sensor_efforts).reshape(-1, 1)
+        effort_0 = np.zeros(self.num_modules).reshape(-1, 1)
+
+        tau_0 = np.matmul(J, effort_reshaped)
+        tau = abs(np.matmul(J, effort_reshaped))
+
+        A_calculated = (tau - Bd*vel - Kd*(L-L0))*(dt/Md) + vel
+
+        theta_lat = -A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
+        theta_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
+
+    def compliance(self): # this provides amplitude (A) values to self.A
+        l = 0.07 # length of module
+        Kd = 0.01
+        Md = 500
+        Bd = 0.01
+        A = 0.18
+        k = 3
+        w_s = self.A * k # spatial frequency, for the curve to helix
+        w_t = 2 # temporal frequency, curve of snake backbone (circular)
+
+        J = np.zeros(self.num_modules)
+        for i in range(1, self.num_modules+1):
+            J[i - 1] = self.A*math.sin(w_s*i*l + w_t*self.t)
+        J = J.reshape(-1, 1)
+        J = J.transpose()
+
+        effort_reshaped = np.array(self.smoothed_sensor_efforts).reshape(-1, 1)
+        effort_0 = np.full((self.num_modules, 1), 0.37).reshape(-1, 1) # calibration efforts, this is basically "0"
+        tau_0 = np.matmul(J, effort_reshaped)
+        tau = abs(np.matmul(J, effort_reshaped))
+        
+        # spring mass damper system
+        self.vel = (tau - Bd*self.vel[0][0] - Kd*(self.A-A))*(self.dt/Md) + self.vel[0][0]
+        self.A = self.vel*self.dt + self.A
+        #print(self.A[0][0], np.average(self.smoothed_sensor_efforts))
+    
+    def helix_climb_ruscelli(self, i):
+        k = 3      
+        A_lat = 0.18 * (self.t)*0.1 # amplitude
+        print(A_lat)
+        A_dor = A_lat
+        w_s_lat = A_lat * k # spatial frequency, for the curve to helix
+        w_s_dor = w_s_lat
+        w_t_lat = 2 # temporal frequency, curve of snake backbone (circular)
+        w_t_dor = w_t_lat
+        l = 0.07 # length of module
+        s_i = i * l # distances from head of module for module i
+
+        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
+        theta_dor = -A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
 
         if (i%4 == 1 or i%4 == 2):
-            alpha_dor *= -1
-            alpha_lat *= -1
+            theta_dor *= -1
+            theta_lat *= -1
         
-        print("k", k)
 
         if (i%2 == 0):
-            return alpha_dor
+            return theta_dor
         else:
-            return alpha_lat
+            return theta_lat
     
     def helix_climb_zhen(self, i): # from the "Modelling Rolling Gaits" paper
         self.compliance_p_r()
         m = 0.4 # length of module
-        #r = 1.5 # radius
-        #p = 1.8 # pitch # looks like we should adjust this for radius change
+        # r = 1.5 # radius
+        # p = 1.8 # pitch # looks like we should adjust this for radius change
         # r = 10.0 - self.t*0.5
         # p = 10.0 - self.t*0.5
         (p, r) = (self.p, self.r)
@@ -194,7 +254,7 @@ class SnakeControl:
     
     def call_joint_efforts(self, data):
         for i, effort in enumerate(data.effort):
-            effort = abs(effort)
+            #effort = abs(effort)
             self.sensor_efforts[i].append(effort)
             self.smoothed_sensor_efforts[i] = running_average_filter(effort, self.sensor_efforts[i], i)
         #self.sensor_efforts = list(data.effort)
