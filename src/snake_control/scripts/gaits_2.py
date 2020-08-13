@@ -44,7 +44,7 @@ class SnakeControl:
         self.r = 0 # radius
         self.state_change_time = 0.0
 
-        self.vel = [[0]]
+        self.vel = 0
         self.A = 0.18
         
         pub = {} # one publisher per joint
@@ -112,38 +112,47 @@ class SnakeControl:
 
         A_calculated = (tau - Bd*vel - Kd*(L-L0))*(dt/Md) + vel
 
-        theta_lat = -A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
-        theta_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
+        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
+        theta_dor = A_dor*math.sin(w_s_dor*s_i + w_t_dor*self.t + math.pi/2)
 
     def compliance(self): # this provides amplitude (A) values to self.A
         l = 0.07 # length of module
-        Kd = 0.01
-        Md = 500
-        Bd = 0.01
-        A = 0.18
+        Kd = 5
+        Md = 1
+        Bd = 10
+        A = 1.2
         k = 3
         w_s = self.A * k # spatial frequency, for the curve to helix
         w_t = 2 # temporal frequency, curve of snake backbone (circular)
 
         J = np.zeros(self.num_modules)
-        for i in range(1, self.num_modules+1):
-            J[i - 1] = self.A*math.sin(w_s*i*l + w_t*self.t)
+        for i in range(1, self.num_modules+1): # NEED TO FLIP EVERY 3rd/4th JOINT
+            if i%2:
+                ### DO DORSAL STUFF
+            else:
+                ### DO 
+            J[i - 1] = math.sin(w_s*i*l + w_t*self.t) 
         J = J.reshape(-1, 1)
         J = J.transpose()
-
-        effort_reshaped = np.array(self.smoothed_sensor_efforts).reshape(-1, 1)
-        effort_0 = np.full((self.num_modules, 1), 0.37).reshape(-1, 1) # calibration efforts, this is basically "0"
-        tau_0 = np.matmul(J, effort_reshaped)
-        tau = abs(np.matmul(J, effort_reshaped))
+        # self.smoothed_sensor_efforts = np.array([0.5]*self.num_modules) # TESTING FAKE tau_ext values
+        effort_reshaped = np.array(self.smoothed_sensor_efforts)
+        # effort_0 = np.full((self.num_modules, 1), 0.37).reshape(-1, 1) # calibration efforts, this is basically "0"
         
+        tau_0 = np.matmul(J, effort_reshaped)
+        
+        tau = np.matmul(J, effort_reshaped)
+        # maybe add LPF for tau
+
         # spring mass damper system
-        self.vel = (tau - Bd*self.vel[0][0] - Kd*(self.A-A))*(self.dt/Md) + self.vel[0][0]
+        self.vel = (tau - Bd*self.vel - Kd*(self.A-A))*(self.dt/Md) + self.vel
+
         self.A = self.vel*self.dt + self.A
-        #print(self.A[0][0], np.average(self.smoothed_sensor_efforts))
+
     
     def helix_climb_ruscelli(self, i):
         k = 3      
-        A_lat = 0.18 * (self.t)*0.1 # amplitude
+        A_lat = 0.18 * (self.t)*0.18 # amplitude
+        A_lat = self.A
         print(A_lat)
         A_dor = A_lat
         w_s_lat = A_lat * k # spatial frequency, for the curve to helix
@@ -153,8 +162,8 @@ class SnakeControl:
         l = 0.07 # length of module
         s_i = i * l # distances from head of module for module i
 
-        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
-        theta_dor = -A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
+        theta_lat = -A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
+        theta_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)
 
         if (i%4 == 1 or i%4 == 2):
             theta_dor *= -1
