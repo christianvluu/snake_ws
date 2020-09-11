@@ -7,6 +7,7 @@ with the appropriate robot hardware interface.
 
 import rospy
 from std_msgs.msg import Float64
+import math
 
 import numpy as np
 
@@ -38,6 +39,10 @@ class JointCmds:
                 self.jnt_cmd_dict[joint] = 0
             else:
                 self.jnt_cmd_dict[joint] = 0
+        
+        self.jnt_cmd_dict["S_07"] = math.pi/2
+        self.jnt_cmd_dict["S_11"] = math.pi/2
+        self.jnt_cmd_dict["S_03"] = math.pi/2
 
         return self.jnt_cmd_dict
 

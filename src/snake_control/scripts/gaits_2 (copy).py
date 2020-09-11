@@ -82,46 +82,13 @@ class SnakeControl:
         self.compliance()
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict # set command
 
-    def helix_climb_ruscelli_with_compliance(self, i): # from Ruscelli compliance paper
-        vel = 0
-
-        ##### NEED TO REWRITE CODE SO THAT ENTIRE MATRIX/ARRAY OF THETA OF SNAKE IS CALCULATED AT ONCE, NOT WHEN WE INPUT IN THIS FUNCITON i
-        k = 3 # 10 seems to work       
-        A_lat = 0.18 # amplitude
-        A_dor = A_lat
-        w_s_lat = A_lat * k # spatial frequency, for the curve to helix
-        w_s_dor = w_s_lat
-        w_t_lat = 2 # temporal frequency, curve of snake backbone (circular)
-        w_t_dor = w_t_lat
-        l = 0.07 # length of module
-        s_i = i * l # distances from head of module for module i
-
-        k = w_s_lat/A_lat # factor lnking amplitude (A) and spatial freq (w_s)
-
-        J = np.zeros(self.num_modules)
-        for i1 in range(1, self.num_modules+1):
-            J[i1 - 1] = A_lat*math.sin(w_s_lat*i1*l + w_t_lat*self.t)
-        J = J.reshape(-1, 1)
-        J = J.transpose()
-
-        effort_reshaped = np.array(self.smoothed_sensor_efforts).reshape(-1, 1)
-        effort_0 = np.zeros(self.num_modules).reshape(-1, 1)
-
-        tau_0 = np.matmul(J, effort_reshaped)
-        tau = abs(np.matmul(J, effort_reshaped))
-
-        # A_calculated = (tau - Bd*vel - Kd*(L-L0))*(dt/Md) + vel # based on centipede code
-
-        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
-        theta_dor = A_dor*math.sin(w_s_dor*s_i + w_t_dor*self.t + math.pi/2)
-
     def compliance(self): # this provides amplitude (A) values to 
         l = 0.07 # length of module
-        Kd = 5
+        Kd = 1
         Md = 1
-        Bd = 10
-        A = 1.2
-        k = 3
+        Bd = 5
+        A = 1.7 # was previously 1.2
+        k = 2.5
         w_s = self.A * k # spatial frequency, for the curve to helix
         w_t = w_s # 2 # temporal frequency, curve of snake backbone (circular)
 
@@ -141,7 +108,7 @@ class SnakeControl:
         ##TESTING ADD BACK####tau_0 = np.matmul(J, effort_reshaped)
         
         ## TESTING ADD BACK#####tau = np.matmul(J, effort_reshaped)
-        tau = np.matmul(J, self.smoothed_sensor_efforts) ## TESTING
+        tau = np.matmul(J, self.sensor_efforts) ## TESTING
         # maybe add LPF for tau
 
         # spring mass damper system
@@ -151,10 +118,10 @@ class SnakeControl:
 
     
     def helix_climb_ruscelli(self, i): # DEPRECATED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        k = 3      
+        k = 1.5      #b
         A_lat = 0.18 * (self.t)*0.18 # amplitude
         A_lat = self.A
-        print(A_lat)
+        print(self.t, A_lat)
         A_dor = A_lat
         w_s_lat = A_lat * k # spatial frequency, for the curve to helix
         w_s_dor = w_s_lat
@@ -166,8 +133,8 @@ class SnakeControl:
         # theta_lat = -A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t) # Don't use this, the mix of sin and cosine
         # theta_dor = A_dor*math.cos(w_s_dor*s_i + w_t_dor*self.t)  # makes this confusing, use below instead
 
-        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t)
-        theta_dor = A_dor*math.sin(w_s_dor*s_i + w_t_dor*self.t + math.pi/2)
+        theta_lat = A_lat*math.sin(w_s_lat*s_i + w_t_lat*self.t + math.pi/2)
+        theta_dor = A_dor*math.sin(w_s_dor*s_i + w_t_dor*self.t )
 
         if (i%4 == 1 or i%4 == 2):
             theta_dor *= -1
@@ -179,97 +146,13 @@ class SnakeControl:
         else:
             return theta_lat
     
-    def helix_climb_zhen(self, i): # from the "Modelling Rolling Gaits" paper
-        self.compliance_p_r()
-        m = 0.4 # length of module
-        # r = 1.5 # radius
-        # p = 1.8 # pitch # looks like we should adjust this for radius change
-        # r = 10.0 - self.t*0.5
-        # p = 10.0 - self.t*0.5
-        (p, r) = (self.p, self.r)
-        # s = i * m # arc length
-        k = r/(r**2 + p**2) # curvature
-        t = p/(r**2 + p**2) # torsion
-        # k_cos = k*math.cos(t*s)
-        # k_sin = k*math.sin(t*s)
-        A = (2*k/t)*math.sin(t*m)
-        alpha_cos = 5*A*math.cos(3*self.t + t*m*i) # m = length of module; i = index of joint
-        alpha_sin = -5*A*math.sin(3*self.t + t*m*i)
-        if (i%4 == 1 or i%4 == 2):
-            alpha_cos *= -1
-            alpha_sin *= -1
-        if (i%2 == 0):
-            return alpha_cos
-        else:
-            return alpha_sin
-    
-    def compliance_p_r(self): # compliance function, changes p, r
-        #print(self.state, round(self.p, 2), round(self.r, 2), round((self.t - self.state_change_time), 2), round(np.average(self.smoothed_sensor_efforts), 2))
-        self.get_state()
-        if (self.state == "roll_to_pole"):
-            self.p = 8.00
-            self.r = 8.00
-        elif (self.state == "wraparound_pole"):
-            self.p = 8.00 - (self.t - self.state_change_time)*0.4
-            self.r = 8.00 - (self.t - self.state_change_time)*0.4
-        elif (self.state == "climb"):
-            return True
-        return True
-    
-    def get_state(self): # get current state of snake for compliance function
-        if (self.t < 3.0):
-            return True
-        elif ((self.state == "roll_to_pole")
-                and (self.smoothed_sensor_efforts[7]) > 1.4):
-            self.state = "wraparound_pole"
-            self.state_change_time = self.t
-        # elif ((self.state == "wraparound_pole") and ((self.t - self.state_change_time) > 3)
-        #         and abs(self.sensor_efforts[7] > 1.8)):
-        #     self.state = "climb"
 
-    def rolling(self, i):
-        m = 0.05 # length of module
-        r = 0.8 # radius
-        p = 0.2 # pitch
-        A = (2*m/r)
-        alpha_cos = A*math.cos(5*self.t) # m = length of module; i = index of joint
-        alpha_sin = A*math.sin(5*self.t)
-        if (i%4 == 1 or i%4 == 2):
-            alpha_cos *= -1
-            alpha_sin *= -1
-        if (i%2 == 1): ## SET REMAINDER TO 1 OR 0 TO FLIP ORIENTATION
-            return alpha_cos
-        else:
-            return alpha_sin
-
-    def wraparound(self): # this wraps snake around a pole
-        average_effort = 0
-        for effort in self.sensor_efforts:
-            average_effort += abs(effort)
-        average_effort /= self.num_modules
-        print(average_effort)
-        self.curl_to_size(0.4)
-        for i, joint in enumerate(self.next_cmds.joints_list):
-            if (i >= 8):
-                if (i%2 == 1):
-                    self.next_cmds.jnt_cmd_dict[joint] = np.pi/4
-                    if ((i+1)%4 == 0):
-                        self.next_cmds.jnt_cmd_dict[joint] *= -1
-        
-
-
-    def curl_to_size(self, size):
-        for i, joint in enumerate(self.next_cmds.joints_list):
-            if (i%2 == 0):
-                self.next_cmds.jnt_cmd_dict[joint] = np.pi/(8 * size)
-                if (i%4 == 0):
-                    self.next_cmds.jnt_cmd_dict[joint] *= -1
-    
     def call_joint_efforts(self, data):
         for i, effort in enumerate(data.effort):
             #effort = abs(effort)
-            self.sensor_efforts[i].append(effort)
-            self.smoothed_sensor_efforts[i] = running_average_filter(effort, self.sensor_efforts[i], i)
+            #self.sensor_efforts[i].append(effort)
+            self.sensor_efforts[i] = effort
+            #self.smoothed_sensor_efforts[i] = running_average_filter(effort, self.sensor_efforts[i], i)
         #self.sensor_efforts = list(data.effort)
         #print(self.smoothed_sensor_efforts)
         return True
