@@ -130,14 +130,8 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     w_t = w_s # temporal frequency, curve of snake backbone (circular)
     num_modules = efforts.shape[0]
 
-    ## GENERATE FAKE effort values
-    for i in range(0, num_modules):
-        if (time < 18): # slowly increase effort values up to 0.6 until time = 18
-            efforts[i] = time/30
-        elif (time >= 18 and time <= 25): # keep constant effort from 18-25sec
-            efforts[i] = 0.6
-        else: # return effort = 0.1 after 25 sec
-            efforts[i] = 0.1
+    # FAKE EFFORT values!!!!!!!!!!!!!!!!!!!!!!!
+    efforts = fakeEffortGenerator(time, num_modules)
 
     J = np.zeros(num_modules) # jacobian to map shape forces
     for i in range(1, num_modules + 1):
@@ -155,6 +149,18 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     new_amp = vel*dt + amp
     print(new_amp, vel)
     return new_amp
+
+def fakeEffortGenerator(time, num_modules):
+    efforts = np.zeros(num_modules)
+    ## GENERATE FAKE effort values
+    for i in range(0, num_modules):
+        if (time < 18): # slowly increase effort values up to 0.6 until time = 18
+            efforts[i] = time/30
+        elif (time >= 18 and time <= 25): # keep constant effort from 18-25sec
+            efforts[i] = 0.6
+        else: # return effort = 0.1 after 25 sec
+            efforts[i] = 0.1
+    return efforts
 
 
 def changeSEAToUnified(SEA): # change from real snake orientation to unified for algorithm
