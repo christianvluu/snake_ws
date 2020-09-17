@@ -29,7 +29,7 @@ class SnakeControl:
         self.state_change_time = 0.0
 
         self.vel = 0
-        self.A = 1 # amplitude used for rolling
+        self.A = 0.3 # amplitude used for rolling
 
         self.const = {
             "l": 0.07,
@@ -37,7 +37,7 @@ class SnakeControl:
             "Bd": 2,
             "Kd": 5,
             "k": 3, # shape value, ALTER THIS to change how the snake wraps around pole
-            "target_amp": 1.2
+            "target_amp": 1.5 # absolute max is 1.55
         }
         
         pub = {} # one publisher per joint
@@ -73,6 +73,7 @@ class SnakeControl:
             self.next_cmds.jnt_cmd_dict[joint] = next_theta[i]
             # setting the actual commands
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict
+        #print(np.max(next_theta))
     
     def gait_generator(self):
         efforts_unified = changeSEAToUnified(self.sensor_efforts)
@@ -84,7 +85,6 @@ class SnakeControl:
         theta = generate_serpernoid_curve(self.A, self.t, self.const,
                                             self.num_modules)
         theta_sea = changeUnifiedToSEA(theta)
-        print (self.t, self.A)
         return theta_sea
     
     def call_joint_efforts(self, data): # gets called automatically by subcriber
@@ -130,15 +130,30 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     w_t = w_s # temporal frequency, curve of snake backbone (circular)
     num_modules = efforts.shape[0]
 
+    ## GENERATE FAKE effort values
+    for i in range(0, num_modules):
+        if (time < 18): # slowly increase effort values up to 0.6 until time = 18
+            efforts[i] = time/30
+        elif (time >= 18 and time <= 25): # keep constant effort from 18-25sec
+            efforts[i] = 0.6
+        else: # return effort = 0.1 after 25 sec
+            efforts[i] = 0.1
+
     J = np.zeros(num_modules) # jacobian to map shape forces
     for i in range(1, num_modules + 1):
-        # derivative of serpenoid curve wrt to shape parameter (amplitude)mp*
-        J[i - 1] = math.sin(w_s*i*l - w_t*time) # add lat and dor difference!!!!!!!!!!!!!!!!!!
+        # derivative of serpenoid curve wrt to shape parameter (amplitude)
+        # add lat and dor difference!!!!!!!!!!!!!!!!!!
+        if (i%2 == 0):
+            J[i - 1] = math.sin(w_s*i*l - w_t*time)
+        else:
+            J[i - 1] = math.sin(w_s*i*l - w_t*time + math.pi/2)
+
         
 
     tau_J = np.matmul(J, efforts) # this should be a single value
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
+    print(new_amp, vel)
     return new_amp
 
 

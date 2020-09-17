@@ -40,9 +40,9 @@ class JointCmds:
             else:
                 self.jnt_cmd_dict[joint] = 0
         
-        self.jnt_cmd_dict["S_07"] = math.pi/2
-        self.jnt_cmd_dict["S_11"] = math.pi/2
-        self.jnt_cmd_dict["S_03"] = math.pi/2
+        # self.jnt_cmd_dict["S_07"] = math.pi/2
+        # self.jnt_cmd_dict["S_11"] = math.pi/2
+        # self.jnt_cmd_dict["S_03"] = math.pi/2
 
         return self.jnt_cmd_dict
 
