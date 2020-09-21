@@ -84,9 +84,9 @@ class SnakeControl:
 
     def compliance(self): # this provides amplitude (A) values to 
         l = 0.07 # length of module
-        Kd = 1
-        Md = 1
-        Bd = 5
+        Kd = 1 # 5
+        Md = 1 # suggested 0.1
+        Bd = 5  # 2
         A = 1.7 # was previously 1.2
         k = 2.5
         w_s = self.A * k # spatial frequency, for the curve to helix

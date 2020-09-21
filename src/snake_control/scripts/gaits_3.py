@@ -33,11 +33,11 @@ class SnakeControl:
 
         self.const = {
             "l": 0.07,
-            "Md": 0.1,
-            "Bd": 2,
-            "Kd": 5,
-            "k": 3, # shape value, ALTER THIS to change how the snake wraps around pole
-            "target_amp": 1.5 # absolute max is 1.55
+            "Md": 0.5,
+            "Bd": 1,
+            "Kd": 3,
+            "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
+            "target_amp": 2.1 # 1.8 is good; max for NO COMPLIANCE is 1.55
         }
         
         pub = {} # one publisher per joint
@@ -89,7 +89,9 @@ class SnakeControl:
     
     def call_joint_efforts(self, data): # gets called automatically by subcriber
         for i, effort in enumerate(data.effort):
-            self.sensor_efforts[i] = effort
+            if (effort != 0):
+                self.sensor_efforts[i] = effort
+            #print(self.sensor_efforts)
         return True
     
     def call_joint_velocities(self, data):
@@ -131,12 +133,11 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     num_modules = efforts.shape[0]
 
     # FAKE EFFORT values!!!!!!!!!!!!!!!!!!!!!!!
-    efforts = fakeEffortGenerator(time, num_modules)
+    #efforts = fakeEffortGenerator(time, num_modules)
 
     J = np.zeros(num_modules) # jacobian to map shape forces
     for i in range(1, num_modules + 1):
         # derivative of serpenoid curve wrt to shape parameter (amplitude)
-        # add lat and dor difference!!!!!!!!!!!!!!!!!!
         if (i%2 == 0):
             J[i - 1] = math.sin(w_s*i*l - w_t*time)
         else:
@@ -144,22 +145,23 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
 
         
 
-    tau_J = np.matmul(J, efforts) # this should be a single value
+    tau_J = 0.2*np.matmul(J, efforts) # this should be a single value, applied effort to pole
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
-    print(new_amp, vel)
+    #print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts
+    print "time: ", time, "shape parameter:", amp
     return new_amp
 
 def fakeEffortGenerator(time, num_modules):
     efforts = np.zeros(num_modules)
     ## GENERATE FAKE effort values
     for i in range(0, num_modules):
-        if (time < 18): # slowly increase effort values up to 0.6 until time = 18
-            efforts[i] = time/30
+        if (time < 18): # sl0.1owly increase effort values up to 0.6 until time = 18
+            efforts[i] = 4 #time/30
         elif (time >= 18 and time <= 25): # keep constant effort from 18-25sec
-            efforts[i] = 0.6
+            efforts[i] = 4 #0.6
         else: # return effort = 0.1 after 25 sec
-            efforts[i] = 0.1
+            efforts[i] = 4 #0.1
     return efforts
 
 
@@ -177,7 +179,7 @@ def changeUnifiedToSEA(unified):
     return changeSEAToUnified(unified)
 
 def running_average_filter(new_val, val_list, i, running_count=10):
-    if len(val_list) > running_count and new_val > 0:
+    if len(val_list) > running_count and new_val != 0:
         val_list.pop(1) # remove the front one
     return np.average(val_list)
 
