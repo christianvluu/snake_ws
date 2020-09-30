@@ -35,9 +35,9 @@ class SnakeControl:
             "l": 0.07,
             "Md": 0.5,
             "Bd": 1,
-            "Kd": 3,
-            "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 2.1 # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "Kd": 7,
+            "k": 1.25, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
+            "target_amp": 1.85 # 1.8 is good; max for NO COMPLIANCE is 1.55
         }
         
         pub = {} # one publisher per joint
@@ -83,7 +83,7 @@ class SnakeControl:
         else:
             self.A = self.const["target_amp"]
         theta = generate_serpernoid_curve(self.A, self.t, self.const,
-                                            self.num_modules)
+                                       self.num_modules)
         theta_sea = changeUnifiedToSEA(theta)
         return theta_sea
     
@@ -120,6 +120,13 @@ def generate_serpernoid_curve(amp, time, const, num_modules):
 
     return theta
 
+def generate_serpernoid_curve_derivative(i):
+    if (i % 2 == 0):
+        return math.sin(amp*k*l - amp*k*time) + a*cos(amp*k*l - a*k*t)*k*l
+    else:
+        return math.sin(amp*k*l - amp*k*time + math.pi/2) + a*cos(amp*k*l - a*k*t + math.pi/2)*k*l
+
+
 
 def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are alr unified
     l = const["l"]
@@ -145,7 +152,7 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
 
         
 
-    tau_J = 0.2*np.matmul(J, efforts) # this should be a single value, applied effort to pole
+    tau_J = 0.1*np.matmul(J, efforts) # this should be a single value, applied effort to pole
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
     #print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts

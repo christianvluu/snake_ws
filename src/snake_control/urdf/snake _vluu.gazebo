@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <gazebo reference="camera_link">
+    <sensor type="multicamera" name="stereo_camera">
+      <update_rate>30.0</update_rate>
+      <camera name="left">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <camera name="right">
+        <pose>0 -0.07 0 0 0 0</pose>
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="stereo_camera_controller" filename="libgazebo_ros_multicamera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>multisense_sl/camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link_optical</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/snake</robotNamespace>
+      <!-- <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType> -->
+    </plugin>
+  </gazebo>
+
+  <!-- TODO: fix colors; Gazebo groups modules so everything comes out red -->
+  <!-- <xacro:macro name="gazeboColor" params="leg mod1 mod2 mod3"> -->
+  <xacro:macro name="gazeboColor" params="mod">
+    <gazebo reference="${mod}__OUTPUT_BODY">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>
+      <material>Gazebo/Black</material>
+      <static>false</static>
+      <selfCollide>true</selfCollide>
+    </gazebo>
+    <gazebo reference="${mod}__INPUT_INTERFACE">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>      
+      <material>Gazebo/Black</material>
+      <static>false</static>
+      <selfCollide>true</selfCollide>
+    </gazebo>
+    <gazebo reference="${mod}__INPUT_INTERFACE__COLLAR">
+      <mu1>0.9</mu1>
+      <mu2>0.9</mu2>     
+      <material>Gazebo/Black</material>
+      <static>false</static>
+      <selfCollide>true</selfCollide>
+    </gazebo>        
+  </xacro:macro>
+
+  <xacro:macro name="modSensors" params="mod">
+    <!-- required for joint torque feedback -->
+    <!-- <gazebo reference="${mod}"> -->
+    <!--   <provideFeedback>true</provideFeedback> -->
+    <!-- </gazebo> -->
+
+    <!-- joint_torque_sensor plugin -->
+    <!-- <gazebo> -->
+    <!--   <plugin name="${mod}_ros_ft_sensor" filename="libgazebo_ros_ft_sensor.so"> -->
+    <!-- 	<robotNamespace>/snake</robotNamespace> -->
+    <!-- 	<updateRate>200.0</updateRate> -->
+    <!-- 	<gaussianNoise>0.025</gaussianNoise> -->
+    <!-- 	<topicName>sensors/${mod}/torque</topicName>  -->
+    <!-- 	<jointName>${mod}</jointName> -->
+    <!--   </plugin> -->
+    <!-- </gazebo> -->
+
+    <!--imu sensor plugin -->
+    <gazebo reference="${mod}__OUTPUT_BODY"> 
+      <gravity>true</gravity>
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="${mod}_ros_imu_sensor">
+          <robotNamespace>/snake</robotNamespace> 
+          <topicName>sensors/${mod}/imu</topicName> 
+          <serviceName>sensors/${mod}/imu</serviceName> 
+          <bodyName>${mod}__OUTPUT_BODY</bodyName> 
+          <updateRateHZ>200.0</updateRateHZ>
+          <gaussianNoise>0.001</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>${mod}__IMU_FRAME</frameName>
+        </plugin>
+        <pose>0 0 0 0 0 0</pose>
+      </sensor>
+    </gazebo> 
+   </xacro:macro>
+
+  <xacro:gazeboColor mod="${S_00}"/>
+  <xacro:gazeboColor mod="${S_01}"/>
+  <xacro:gazeboColor mod="${S_02}"/>
+  <xacro:gazeboColor mod="${S_03}"/>
+  <xacro:gazeboColor mod="${S_04}"/>
+  <xacro:gazeboColor mod="${S_05}"/>
+  <xacro:gazeboColor mod="${S_06}"/>
+  <xacro:gazeboColor mod="${S_07}"/>
+  <xacro:gazeboColor mod="${S_08}"/>
+  <xacro:gazeboColor mod="${S_09}"/>
+  <xacro:gazeboColor mod="${S_10}"/>
+  <xacro:gazeboColor mod="${S_11}"/>
+  <xacro:gazeboColor mod="${S_12}"/>
+  <xacro:gazeboColor mod="${S_13}"/>
+  <xacro:gazeboColor mod="${S_14}"/>
+  <xacro:gazeboColor mod="${S_15}"/>
+
+  <xacro:modSensors mod="${S_00}"/>
+  <xacro:modSensors mod="${S_01}"/>
+  <xacro:modSensors mod="${S_02}"/>
+  <xacro:modSensors mod="${S_03}"/>
+  <xacro:modSensors mod="${S_04}"/>
+  <xacro:modSensors mod="${S_05}"/>
+  <xacro:modSensors mod="${S_06}"/>
+  <xacro:modSensors mod="${S_07}"/>
+  <xacro:modSensors mod="${S_08}"/>
+  <xacro:modSensors mod="${S_09}"/>
+  <xacro:modSensors mod="${S_10}"/>
+  <xacro:modSensors mod="${S_11}"/>
+  <xacro:modSensors mod="${S_12}"/>
+  <xacro:modSensors mod="${S_13}"/>
+  <xacro:modSensors mod="${S_14}"/>
+  <xacro:modSensors mod="${S_15}"/>
+
+</robot>
