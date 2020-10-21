@@ -40,7 +40,7 @@
   <rosparam file="$(find snake_control)/config/controllers.yaml" command="load"/>
 
   <!-- load the controllers -->
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/snake" args="joint_state_controller S_00_eff_pos_controller S_01_eff_pos_controller S_02_eff_pos_controller S_03_eff_pos_controller S_04_eff_pos_controller S_05_eff_pos_controller S_06_eff_pos_controller S_07_eff_pos_controller S_08_eff_pos_controller S_09_eff_pos_controller S_10_eff_pos_controller S_11_eff_pos_controller S_12_eff_pos_controller S_13_eff_pos_controller S_14_eff_pos_controller S_15_eff_pos_controller"/>
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="true" output="screen" ns="/snake" args="joint_state_controller S_00_eff_pos_controller S_01_eff_pos_controller S_02_eff_pos_controller S_03_eff_pos_controller S_04_eff_pos_controller S_05_eff_pos_controller S_06_eff_pos_controller S_07_eff_pos_controller S_08_eff_pos_controller S_09_eff_pos_controller S_10_eff_pos_controller S_11_eff_pos_controller S_12_eff_pos_controller S_13_eff_pos_controller S_14_eff_pos_controller S_15_eff_pos_controller"/>
 
   <!-- convert joint states to TF transforms for rviz -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">

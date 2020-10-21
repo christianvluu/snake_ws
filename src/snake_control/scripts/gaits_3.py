@@ -33,11 +33,12 @@ class SnakeControl:
 
         self.const = {
             "l": 0.07,
-            "Md": 0.5,
-            "Bd": 1,
-            "Kd": 7,
+            "Md": 0.1,
+            "Bd": 2,
+            "Kd": 5,
             "k": 1.25, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 1.85 # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "target_amp": 1.85, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "w_t": 3 # speed of rolling
         }
         
         pub = {} # one publisher per joint
@@ -109,7 +110,7 @@ def generate_serpernoid_curve(amp, time, const, num_modules):
     k = const["k"]
     target_amp = const["target_amp"]
     w_s = amp * k # spatial frequency, for the curve to helix
-    w_t = w_s # temporal frequency, curve of snake backbone (circular)
+    w_t = const["w_t"] # temporal frequency, curve of snake backbone (circular)
     
     theta = np.zeros(num_modules)
     for i in range(0, num_modules):
@@ -120,11 +121,11 @@ def generate_serpernoid_curve(amp, time, const, num_modules):
 
     return theta
 
-def generate_serpernoid_curve_derivative(i):
-    if (i % 2 == 0):
-        return math.sin(amp*k*l - amp*k*time) + a*cos(amp*k*l - a*k*t)*k*l
+def generate_serpernoid_curve_derivative(i, amp, k, time, l, w_t):
+    if (i % 2 == 0): # d(theta)/d(amp)
+        return math.sin(amp*k*i*l - w_t*time) + amp*math.cos(amp*k*i*l - w_t*time)*(k*i*l)
     else:
-        return math.sin(amp*k*l - amp*k*time + math.pi/2) + a*cos(amp*k*l - a*k*t + math.pi/2)*k*l
+        return math.sin(amp*k*i*l - w_t*time + math.pi/2) + amp*math.cos(amp*k*i*l - w_t*time + math.pi/2)*(k*i*l)
 
 
 
@@ -136,27 +137,29 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     k = const["k"]
     target_amp = const["target_amp"]
     w_s = amp * k # spatial frequency, for the curve to helix
-    w_t = w_s # temporal frequency, curve of snake backbone (circular)
+    w_t = const["w_t"] # temporal frequency, curve of snake backbone (circular)
     num_modules = efforts.shape[0]
 
     # FAKE EFFORT values!!!!!!!!!!!!!!!!!!!!!!!
     #efforts = fakeEffortGenerator(time, num_modules)
 
     J = np.zeros(num_modules) # jacobian to map shape forces
-    for i in range(1, num_modules + 1):
+    for i in range(0, num_modules):
         # derivative of serpenoid curve wrt to shape parameter (amplitude)
-        if (i%2 == 0):
-            J[i - 1] = math.sin(w_s*i*l - w_t*time)
-        else:
-            J[i - 1] = math.sin(w_s*i*l - w_t*time + math.pi/2)
+        J[i] = generate_serpernoid_curve_derivative(i, amp, k, time, l, w_t)
+        # if (i%2 == 0):
+        #     J[i - 1] = math.sin(w_s*i*l - w_t*time)
+        # else:
+        #     J[i - 1] = math.sin(w_s*i*l - w_t*time + math.pi/2)
 
         
 
     tau_J = 0.1*np.matmul(J, efforts) # this should be a single value, applied effort to pole
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
-    #print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts
+    # print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts
     print "time: ", time, "shape parameter:", amp
+    # print "efforts: ", efforts
     return new_amp
 
 def fakeEffortGenerator(time, num_modules):

@@ -29,7 +29,7 @@
   <xacro:property name="S_15" value="SA016__MoJo" />
 
   <!-- Import all Gazebo-customization elements -->
-  <xacro:include filename="./snake.gazebo" />
+  <xacro:include filename="./snake_vluu.gazebo" />
 
   <link name="kdl_dummy_root" />
   <joint name="kdl_dummy_root_to_base" type="fixed">
