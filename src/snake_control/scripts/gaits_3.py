@@ -2,6 +2,7 @@
 import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Imu
 import numpy as np
 import math
 
@@ -15,13 +16,30 @@ class SnakeControl:
         self.t = 0.0
         self.dt = dt
         self.isPaused = False
+
+        # use this for currentSpikeGenerator
         self.sensor_efforts = np.zeros(num_modules)
-        self.smoothed_sensor_efforts = np.zeros(num_modules)
+        self.prev_cmd_theta = np.zeros(num_modules)
+        self.curr_cmd_theta = np.zeros(num_modules)
+        self.prev2curr_delta = np.zeros(num_modules)
+
+        self.sim_currents = np.zeros(num_modules)
         self.sensor_velocities = np.zeros(num_modules)
+        self.sensor_linear_accel_x = np.zeros(num_modules)
+        self.sensor_linear_accel_y = np.zeros(num_modules)
+        self.sensor_linear_accel_z = np.zeros(num_modules)
+        self.sensor_angular_vel_x = np.zeros(num_modules)
+        self.sensor_angular_vel_y = np.zeros(num_modules)
+        self.sensor_angular_vel_z = np.zeros(num_modules)
+        self.sensor_orientation_x = np.zeros(num_modules)
+        self.sensor_orientation_y = np.zeros(num_modules)
+        self.sensor_orientation_z = np.zeros(num_modules)
         rospy.Subscriber("/snake/joint_states", JointState,
                             self.call_joint_efforts)
         rospy.Subscriber("/snake/joint_states", JointState,
                             self.call_joint_velocities)
+        rospy.Subscriber("/snake/sensors/SA001__MoJo/imu", Imu,
+                            self.call_imu_001)
         self.state = "roll_to_pole"
 
         self.p = 0 # pitch
@@ -35,10 +53,10 @@ class SnakeControl:
             "l": 0.07,
             "Md": 0.1,
             "Bd": 2,
-            "Kd": 5,
+            "Kd": 1.5,
             "k": 1.25, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 1.85, # 1.8 is good; max for NO COMPLIANCE is 1.55
-            "w_t": 3 # speed of rolling
+            "target_amp": 1.8, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "w_t": 4 # speed of rolling
         }
         
         pub = {} # one publisher per joint
@@ -68,12 +86,17 @@ class SnakeControl:
                 # self.call_IMU()
             rate.sleep()
     
-    def gait_caller(self): # function to assign commands
+    def gait_caller(self): # function to assign commands, gets called once per increment of self.dt
         next_theta = self.gait_generator()
         for i, joint in enumerate(self.next_cmds.joints_list):
+            self.curr_cmd_theta[i] = next_theta[i]
             self.next_cmds.jnt_cmd_dict[joint] = next_theta[i]
             # setting the actual commands
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict
+        
+        
+        ###### ADD NOISE WRAPPER FUNCTION HERE
+
         #print(np.max(next_theta))
     
     def gait_generator(self):
@@ -92,11 +115,27 @@ class SnakeControl:
         for i, effort in enumerate(data.effort):
             if (effort != 0):
                 self.sensor_efforts[i] = effort
-            #print(self.sensor_efforts)
+        noise = np.zeros(len(self.sensor_efforts)) # noise array to add to sensor data
+
+        # whiteNoiseGenerator(self.sensor_efforts, len(self.sensor_efforts), self.sim_currents)
+        # currentSpikeGenerator(len(self.sensor_efforts), self.sim_currents, self.prev_cmd_theta, self.curr_cmd_theta, self.prev2curr_delta)
         return True
     
     def call_joint_velocities(self, data):
         self.sensor_velocities = list(data.velocity)
+        return True
+
+    def call_imu_001(self, data):
+        i = 0
+        self.sensor_linear_accel_x[i] = data.linear_acceleration.x
+        self.sensor_linear_accel_y[i] = data.linear_acceleration.y
+        self.sensor_linear_accel_z[i] = data.linear_acceleration.z
+        self.sensor_angular_vel_x[i] = data.angular_velocity.x
+        self.sensor_angular_vel_y[i] = data.angular_velocity.y
+        self.sensor_angular_vel_z[i] = data.angular_velocity.z
+        self.sensor_orientation_x[i] = data.orientation.x
+        self.sensor_orientation_y[i] = data.orientation.y
+        self.sensor_orientation_z[i] = data.orientation.z
         return True
 
 
@@ -146,15 +185,15 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     J = np.zeros(num_modules) # jacobian to map shape forces
     for i in range(0, num_modules):
         # derivative of serpenoid curve wrt to shape parameter (amplitude)
-        J[i] = generate_serpernoid_curve_derivative(i, amp, k, time, l, w_t)
-        # if (i%2 == 0):
-        #     J[i - 1] = math.sin(w_s*i*l - w_t*time)
-        # else:
-        #     J[i - 1] = math.sin(w_s*i*l - w_t*time + math.pi/2)
+        # J[i] = generate_serpernoid_curve_derivative(i, amp, k, time, l, w_t)
+        if (i%2 == 0):
+            J[i - 1] = math.sin(w_s*i*l - w_t*time)
+        else:
+            J[i - 1] = math.sin(w_s*i*l - w_t*time + math.pi/2)
 
         
 
-    tau_J = 0.1*np.matmul(J, efforts) # this should be a single value, applied effort to pole
+    tau_J = 0.2*np.matmul(J, efforts) # this should be a single value, applied effort to pole
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
     # print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts
@@ -173,6 +212,38 @@ def fakeEffortGenerator(time, num_modules):
         else: # return effort = 0.1 after 25 sec
             efforts[i] = 4 #0.1
     return efforts
+
+def whiteNoiseGenerator(efforts, num_modules, currents): # adds AWGN noise
+    
+    # Additive White Gaussian Noise (AWGN)
+    if (efforts[0] != 0): # ensure the effort values from the sim is != 0
+        SNR_db = 20 # signal to noise ratio (dB)
+        sig_avg_efforts = np.mean(np.abs(efforts))
+        sig_avg_db = 10 * np.log10(sig_avg_efforts)
+
+        noise_avg_db = sig_avg_db - SNR_db
+        noise_avg_effort = 10 ** (noise_avg_db/10)
+        noise_efforts = np.random.normal(0, np.sqrt(noise_avg_effort), num_modules)
+        currents = noise_efforts + efforts
+
+def currentSpikeGenerator(num_modules, currents, prev_pos, curr_pos, delta):
+    # delta is the difference between prev_pos and curr_pos (curr_pos - prev_pos)
+    # during the previous command sent to snake (used to keep track of direction of change)
+    for i in range(0, num_modules):
+        curr_delta = curr_pos - prev_pos
+        if (checkSign(delta[i]) !=  checkSign(curr_delta)): # add current spike if not in same direction
+            currents[i] *= 1.5 # the abs(i-7)/14 part is to scale current spike, higher current spike in the middle modules
+        delta[i] = curr_delta
+
+
+def checkSign(x):
+    if x > 0:
+        return 1
+    if x < 0:
+        return -1
+    else:
+        return 0
+
 
 
 def changeSEAToUnified(SEA): # change from real snake orientation to unified for algorithm
