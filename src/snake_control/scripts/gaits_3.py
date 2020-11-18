@@ -5,6 +5,8 @@ from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Imu
 import numpy as np
 import math
+import copy
+from noise import *
 
 
 IS_COMPLIANT = True # run compliant algorithm?
@@ -22,6 +24,7 @@ class SnakeControl:
         self.prev_cmd_theta = np.zeros(num_modules)
         self.curr_cmd_theta = np.zeros(num_modules)
         self.prev2curr_delta = np.zeros(num_modules)
+        self.spike_loop = np.zeros(num_modules)
 
         self.sim_currents = np.zeros(num_modules)
         self.sensor_velocities = np.zeros(num_modules)
@@ -54,7 +57,7 @@ class SnakeControl:
             "Md": 0.1,
             "Bd": 2,
             "Kd": 1.5,
-            "k": 1.25, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
+            "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
             "target_amp": 1.8, # 1.8 is good; max for NO COMPLIANCE is 1.55
             "w_t": 4 # speed of rolling
         }
@@ -89,6 +92,7 @@ class SnakeControl:
     def gait_caller(self): # function to assign commands, gets called once per increment of self.dt
         next_theta = self.gait_generator()
         for i, joint in enumerate(self.next_cmds.joints_list):
+            self.prev_cmd_theta[i] = copy.deepcopy(self.curr_cmd_theta[i])
             self.curr_cmd_theta[i] = next_theta[i]
             self.next_cmds.jnt_cmd_dict[joint] = next_theta[i]
             # setting the actual commands
@@ -115,10 +119,25 @@ class SnakeControl:
         for i, effort in enumerate(data.effort):
             if (effort != 0):
                 self.sensor_efforts[i] = effort
-        noise = np.zeros(len(self.sensor_efforts)) # noise array to add to sensor data
+        print("raw")
+        print(self.sensor_efforts[1:5])
 
-        # whiteNoiseGenerator(self.sensor_efforts, len(self.sensor_efforts), self.sim_currents)
-        # currentSpikeGenerator(len(self.sensor_efforts), self.sim_currents, self.prev_cmd_theta, self.curr_cmd_theta, self.prev2curr_delta)
+        # add white noise
+        self.sensor_efforts += add_white_gaussian_noise(self.sensor_efforts)
+        print("white noise:")
+        print(self.sensor_efforts[1:5])
+
+        # add low freq  noise
+        self.sensor_efforts += add_low_freq_noise(self.sensor_efforts, self.t)
+        print("low freq noise:")
+        print(self.sensor_efforts[1:5])
+
+        # add curr_spike
+        for i in range(0, len(self.sensor_efforts)):
+            self.sensor_efforts[i] *= add_current_spike(self.prev_cmd_theta[i], self.curr_cmd_theta[i], self.spike_loop, self.prev2curr_delta, i)
+        print("spike generator:")
+        # print(self.prev2curr_delta)
+        print(self.sensor_efforts[1:5])
         return True
     
     def call_joint_velocities(self, data):
