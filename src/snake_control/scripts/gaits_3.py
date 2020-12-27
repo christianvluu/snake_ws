@@ -3,6 +3,7 @@ import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Imu
+from gazebo_msgs.msg import ModelStates
 import numpy as np
 import math
 import copy
@@ -11,12 +12,16 @@ from noise import *
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "rolling_oneline"
+FILE_NAME = "test_no_prediction_from_currents"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
-RECORD_DATA = False
-USE_MODEL = True
+RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
+USE_MODEL = False
+IS_CURRENTS = True
+
+RECORD_POS = True
+FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 
 class SnakeControl:
     def __init__(self, num_modules, hz, dt):
@@ -32,6 +37,9 @@ class SnakeControl:
         self.curr_cmd_theta = np.zeros(num_modules)
         self.prev2curr_delta = np.zeros(num_modules)
         self.spike_loop = np.zeros(num_modules)
+
+        # reporting pose status
+        self.pos_z = np.zeros(self.num_modules)
 
         self.sim_currents = np.zeros(num_modules)
         self.sensor_velocities = np.zeros(num_modules)
@@ -50,6 +58,8 @@ class SnakeControl:
                             self.call_joint_velocities)
         rospy.Subscriber("/snake/sensors/SA001__MoJo/imu", Imu,
                             self.call_imu_001)
+        rospy.Subscriber("/gazebo/model_states", ModelStates,
+                            self.call_pose)
         self.state = "roll_to_pole"
 
         self.p = 0 # pitch
@@ -65,7 +75,7 @@ class SnakeControl:
             "Bd": 2,
             "Kd": 1.5,
             "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 2.0, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "target_amp": 2.1, # 1.8 is good; max for NO COMPLIANCE is 1.55
             "w_t": 4 # speed of rolling
         }
         if (RECORD_DATA): 
@@ -80,7 +90,11 @@ class SnakeControl:
             self.fC.write("l    Md Bd Kd  k   amp w_t\n")
             self.fC.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
 
-        
+        if (RECORD_POS):
+            self.fP = open(FILE_POS, "a+")
+            self.fP.write("l    Md Bd Kd  k   amp w_t\n")
+            self.fP.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
+
         pub = {} # one publisher per joint
         ns_str = '/snake'
         cont_str = 'eff_pos_controller'
@@ -123,15 +137,22 @@ class SnakeControl:
         self.curr_cmds.jnt_cmd_dict = self.next_cmds.jnt_cmd_dict
         
         
-        ###### ADD NOISE WRAPPER FUNCTION HERE
+        if (RECORD_POS):
+            print("pos Z: ", self.pos_z[2])
+            self.fP.write(str(self.t) + " " + "0 " + str(self.pos_z[2]) + "\n")
 
         #print(np.max(next_theta))
     
     def gait_generator(self):
         if (USE_MODEL):
-            efforts_unified = np.zeros(self.num_modules)
+            temp = changeSEAToUnified(self.sensor_efforts)
+            print(temp[5])
+            # efforts_unified = np.zeros(self.num_modules)
+            efforts_predicted = np.zeros(self.num_modules)
             for i in range(0, self.num_modules):
-                efforts_unified[i] = 0.9344 * self.sensor_efforts[i] - 0.001
+                efforts_predicted[i] = 0.9344 * self.sensor_efforts[i] - 0.001
+            efforts_unified = changeSEAToUnified(efforts_predicted)
+            print(efforts_unified[5])
         else: 
             efforts_unified = changeSEAToUnified(self.sensor_efforts)
         if (IS_COMPLIANT):
@@ -148,7 +169,7 @@ class SnakeControl:
         for i, effort in enumerate(data.effort):
             if (effort != 0):
                 self.sensor_efforts[i] = effort
-        #print("raw")
+        # print("raw")
         #print(self.sensor_efforts[1:5])
 
         if (RECORD_DATA):
@@ -157,49 +178,57 @@ class SnakeControl:
                 self.fE.write(str(self.sensor_efforts[i]) + "\n")
             # self.fE.write("\n");
 
+        if (IS_CURRENTS):
+            # add white noise
+            self.sensor_efforts += add_white_gaussian_noise(self.sensor_efforts)
+            #print("white noise:")
+            #print(self.sensor_efforts[1:5])
             
+            # if (RECORD_DATA):
+            #     self.f.write(str(self.t) + " AWGN: ")
+            #     for i in range(0, len(self.sensor_efforts)):
+            #         self.f.write(" " + str(self.sensor_efforts[i]))
+            #     self.f.write("\n")
 
-        # add white noise
-        self.sensor_efforts += add_white_gaussian_noise(self.sensor_efforts)
-        #print("white noise:")
-        #print(self.sensor_efforts[1:5])
-        
-        # if (RECORD_DATA):
-        #     self.f.write(str(self.t) + " AWGN: ")
-        #     for i in range(0, len(self.sensor_efforts)):
-        #         self.f.write(" " + str(self.sensor_efforts[i]))
-        #     self.f.write("\n")
+            # add low freq  noise
+            self.sensor_efforts += add_low_freq_noise(self.sensor_efforts, self.t)
+            #print("low freq noise:")
+            #print(self.sensor_efforts[1:5])
 
-        # add low freq  noise
-        self.sensor_efforts += add_low_freq_noise(self.sensor_efforts, self.t)
-        #print("low freq noise:")
-        #print(self.sensor_efforts[1:5])
+            # if (RECORD_DATA):
+            #     self.f.write(str(self.t) + " LowFreq: ")
+            #     for i in range(0, len(self.sensor_efforts)):
+            #         self.f.write(" " + str(self.sensor_efforts[i]))
+            #     self.f.write("\n")
 
-        # if (RECORD_DATA):
-        #     self.f.write(str(self.t) + " LowFreq: ")
-        #     for i in range(0, len(self.sensor_efforts)):
-        #         self.f.write(" " + str(self.sensor_efforts[i]))
-        #     self.f.write("\n")
-
-        # add curr_spike
-        for i in range(0, len(self.sensor_efforts)):
-            self.sensor_efforts[i] *= add_current_spike(self.prev_cmd_theta[i], self.curr_cmd_theta[i], self.spike_loop, self.prev2curr_delta, i)
-        #print("spike generator:")
-        # print(self.prev2curr_delta)
-        #print(self.sensor_efforts[1:5])
-
-        if (RECORD_DATA):
-            # self.f.write(str(self.t) + "")
+            # add curr_spike
             for i in range(0, len(self.sensor_efforts)):
-                self.fC.write(str(self.sensor_efforts[i]) + "\n")
-            # self.fC.write("\n")
+                self.sensor_efforts[i] *= add_current_spike(self.prev_cmd_theta[i], self.curr_cmd_theta[i], self.spike_loop, self.prev2curr_delta, i)
+            #print("spike generator:")
+            # print(self.prev2curr_delta)
+            #print(self.sensor_efforts[1:5])
+
+            if (RECORD_DATA):
+                # self.f.write(str(self.t) + "")
+                for i in range(0, len(self.sensor_efforts)):
+                    self.fC.write(str(self.sensor_efforts[i]) + "\n")
+                # self.fC.write("\n")
 
         
         return True
     
     def call_joint_velocities(self, data):
         self.sensor_velocities = list(data.velocity)
+        # print("vel: ", self.sensor_velocities[5])
         return True
+    
+    def call_pose(self, data):
+        # self.pos_z = np.zeros(self.num_modules)
+        for i, pose in enumerate(data.pose):
+            if (pose.position.z != 0):
+                self.pos_z[i] = pose.position.z
+            #print("posz: ", pose.position.z, "i: ", i)
+        # writing POS data to .txt is in gait_caller function
 
     def call_imu_001(self, data):
         i = 0
