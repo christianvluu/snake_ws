@@ -165,13 +165,13 @@
 (setf (get snake_control::PublishJointCmdsRequest :md5sum-) "a95cf7713f743cc252b964b3db9e31ef")
 (setf (get snake_control::PublishJointCmdsRequest :datatype-) "snake_control/PublishJointCmdsRequest")
 (setf (get snake_control::PublishJointCmdsRequest :definition-)
-      "uint32 rate
-duration T
-float32[] params
-bool reset
+      "uint32 rate        # the desired rate (Hz) for publication of joint commands
+duration T         # the duration to send at the specified rate
+float32[] params   # a list of joint command parameters
+bool reset         # wheter or not to reset the state after finishing
 ---
-Header header
-bool success
+Header header      # store the time just after publishing the last command
+bool success       # indicate if the service call was successful
 
 ================================================================================
 MSG: std_msgs/Header
@@ -187,21 +187,19 @@ uint32 seq
 # time-handling sugar is provided by the client library
 time stamp
 #Frame this data is associated with
-# 0: no frame
-# 1: global frame
 string frame_id
 ")
 
 (setf (get snake_control::PublishJointCmdsResponse :md5sum-) "a95cf7713f743cc252b964b3db9e31ef")
 (setf (get snake_control::PublishJointCmdsResponse :datatype-) "snake_control/PublishJointCmdsResponse")
 (setf (get snake_control::PublishJointCmdsResponse :definition-)
-      "uint32 rate
-duration T
-float32[] params
-bool reset
+      "uint32 rate        # the desired rate (Hz) for publication of joint commands
+duration T         # the duration to send at the specified rate
+float32[] params   # a list of joint command parameters
+bool reset         # wheter or not to reset the state after finishing
 ---
-Header header
-bool success
+Header header      # store the time just after publishing the last command
+bool success       # indicate if the service call was successful
 
 ================================================================================
 MSG: std_msgs/Header
@@ -217,8 +215,6 @@ uint32 seq
 # time-handling sugar is provided by the client library
 time stamp
 #Frame this data is associated with
-# 0: no frame
-# 1: global frame
 string frame_id
 ")
 

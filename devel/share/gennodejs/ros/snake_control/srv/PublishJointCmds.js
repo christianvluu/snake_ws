@@ -102,10 +102,10 @@ class PublishJointCmdsRequest {
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    uint32 rate
-    duration T
-    float32[] params
-    bool reset
+    uint32 rate        # the desired rate (Hz) for publication of joint commands
+    duration T         # the duration to send at the specified rate
+    float32[] params   # a list of joint command parameters
+    bool reset         # wheter or not to reset the state after finishing
     
     `;
   }
@@ -210,8 +210,8 @@ class PublishJointCmdsResponse {
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    Header header
-    bool success
+    Header header      # store the time just after publishing the last command
+    bool success       # indicate if the service call was successful
     
     ================================================================================
     MSG: std_msgs/Header

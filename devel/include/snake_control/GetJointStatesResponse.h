@@ -160,9 +160,9 @@ struct Definition< ::snake_control::GetJointStatesResponse_<ContainerAllocator> 
   static const char* value()
   {
     return "Header header\n"
-"\n"
+"# string[] name\n"
 "float64[] position\n"
-"\n"
+"# float64[] velocity\n"
 "float64[] effort\n"
 "\n"
 "\n"

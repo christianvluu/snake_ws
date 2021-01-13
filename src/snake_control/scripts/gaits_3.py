@@ -8,20 +8,64 @@ import numpy as np
 import math
 import copy
 from noise import *
+from data_processing import *
 
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "test_no_prediction_from_currents"
+FILE_NAME = "data_r0.065_k1.3_amp_2.05"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
-RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
+RECORD_DATA = True # to record all data, IS_CURRENT also needs to be True
 USE_MODEL = False
 IS_CURRENTS = True
+COMPLIANCE_WITH_CURRENTS = False
 
-RECORD_POS = True
+RECORD_POS = True # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
+
+"""
+MODES TO RUN THIS FILE USING FLAGS
+1) Normal with(out) Compliance (don't use currents, no logging)
+   - IS_COMPLIANCE = True/False
+   - RECORD_DATA = False
+   - USE_MODEL = False
+   - IS_CURRENTS = False
+   - COMPLIANCE_WITH_CURRENTS = False
+   - RECORD_POS = False
+2) Normal with(out) Compliance (USE currents, no logging)
+   - IS_COMPLIANCE = True/False
+   - RECORD_DATA = False
+   - USE_MODEL = False
+   - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = True
+   - RECORD_POS = False
+3) Datalogging with(out) Compliance (don't currents, log efforts, theta, pos, simulated currents)
+   - IS_COMPLIANCE = True/False
+   - RECORD_DATA = True
+   - USE_MODEL = False
+   - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = False
+   - RECORD_POS = True
+4) Compliance with Model (don't use currents, log efforst, theta, pos, simulated currents)
+   - IS_COMPLIANCE = True
+   - RECORD_DATA = False
+   - USE_MODEL = True
+   - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = True
+   - RECORD_POS = True
+   
+
+#### NOT VERY USEFUL BELOW ####
+3) Datalogging with(out) Compliance (don't use currents, log efforts, theta, pos, simulated currents)
+   - IS_COMPLIANCE = True/False
+   - RECORD_DATA = True
+   - USE_MODEL = False
+   - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = False
+   - RECORD_POS = True
+"""
 
 class SnakeControl:
     def __init__(self, num_modules, hz, dt):
@@ -83,17 +127,21 @@ class SnakeControl:
             self.fC = open(FILE_CURRENTS, "a+")
             self.fE = open(FILE_EFFORTS, "a+")
 
-            self.fT.write("l    Md Bd Kd  k   amp w_t\n")
-            self.fT.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
-            self.fE.write("l    Md Bd Kd  k   amp w_t\n")
-            self.fE.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
-            self.fC.write("l    Md Bd Kd  k   amp w_t\n")
-            self.fC.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
+            self.fT.write("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n")
+            self.fE.write("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n")
+            self.fC.write("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n")
+            # self.fT.write("l,Md,Bd,Kd,k,amp,w_t\n")
+            # self.fT.write(str(self.const["l"]) + "," + str(self.const["Md"]) + "," + str(self.const["Bd"]) + "," + str(self.const["Kd"]) + "," + str(self.const["k"]) + "," + str(self.const["target_amp"]) + "," +  str(self.const["w_t"]) + "\n")
+            # self.fE.write("l,Md,Bd,Kd,k,amp,w_t\n")
+            # self.fE.write(str(self.const["l"]) + "," + str(self.const["Md"]) + "," + str(self.const["Bd"]) + "," + str(self.const["Kd"]) + "," + str(self.const["k"]) + "," + str(self.const["target_amp"]) + "," +  str(self.const["w_t"]) + "\n")
+            # self.fC.write("l,Md,Bd,Kd,k,amp,w_t\n")
+            # self.fC.write(str(self.const["l"]) + "," + str(self.const["Md"]) + "," + str(self.const["Bd"]) + "," + str(self.const["Kd"]) + "," + str(self.const["k"]) + "," + str(self.const["target_amp"]) + "," +  str(self.const["w_t"]) + "\n")
 
         if (RECORD_POS):
             self.fP = open(FILE_POS, "a+")
-            self.fP.write("l    Md Bd Kd  k   amp w_t\n")
-            self.fP.write(str(self.const["l"]) + " " + str(self.const["Md"]) + " " + str(self.const["Bd"]) + " " + str(self.const["Kd"]) + " " + str(self.const["k"]) + " " + str(self.const["target_amp"]) +" " +  str(self.const["w_t"]) + "\n")
+            self.fP.write("time,index,height\n")
+            # self.fP.write("l,Md,Bd,Kd,k,amp,w_t\n")
+            # self.fP.write(str(self.const["l"]) + "," + str(self.const["Md"]) + "," + str(self.const["Bd"]) + "," + str(self.const["Kd"]) + "," + str(self.const["k"]) + "," + str(self.const["target_amp"]) + "," +  str(self.const["w_t"]) + "\n")
 
         pub = {} # one publisher per joint
         ns_str = '/snake'
@@ -127,8 +175,10 @@ class SnakeControl:
         if (RECORD_DATA):
             # self.fT.write(str(self.t) + " Theta:")
             for i in range(0, len(next_theta)):
-                self.fT.write(str(next_theta[i]) + "\n")
-            # self.fT.write("\n")
+                if (i != len(next_theta)-1):
+                    self.fT.write(str(next_theta[i]) + ",")
+                else:
+                    self.fT.write(str(next_theta[i]) + "\n")
         for i, joint in enumerate(self.next_cmds.joints_list):
             self.prev_cmd_theta[i] = copy.deepcopy(self.curr_cmd_theta[i])
             self.curr_cmd_theta[i] = next_theta[i]
@@ -173,10 +223,16 @@ class SnakeControl:
         #print(self.sensor_efforts[1:5])
 
         if (RECORD_DATA):
-            # self.fE.write(str(self.t) + " Efforts: ")
             for i in range(0, len(self.sensor_efforts)):
-                self.fE.write(str(self.sensor_efforts[i]) + "\n")
-            # self.fE.write("\n");
+                if (i != len(self.sensor_efforts)-1):
+                    self.fE.write(str(self.sensor_efforts[i]) + ",")
+                else:
+                    self.fE.write(str(self.sensor_efforts[i]) + "\n")
+
+        if (not COMPLIANCE_WITH_CURRENTS):
+            sensor_efforts_temp = np.zeros(len(self.sensor_efforts))
+            for i in range(0, len(self.sensor_efforts)):
+                sensor_efforts_temp[i] = copy.deepcopy(self.sensor_efforts[i])
 
         if (IS_CURRENTS):
             # add white noise
@@ -211,9 +267,15 @@ class SnakeControl:
             if (RECORD_DATA):
                 # self.f.write(str(self.t) + "")
                 for i in range(0, len(self.sensor_efforts)):
-                    self.fC.write(str(self.sensor_efforts[i]) + "\n")
+                    if (i != len(self.sensor_efforts)-1):
+                        self.fC.write(str(self.sensor_efforts[i]) + ",")
+                    else:
+                        self.fC.write(str(self.sensor_efforts[i]) + "\n")
                 # self.fC.write("\n")
 
+        if (not COMPLIANCE_WITH_CURRENTS):
+            for i in range(0, len(self.sensor_efforts)):
+                self.sensor_efforts[i] = copy.deepcopy(sensor_efforts_temp[i])
         
         return True
     

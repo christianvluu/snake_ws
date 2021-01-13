@@ -153,8 +153,8 @@ struct Definition< ::snake_control::PublishJointCmdsResponse_<ContainerAllocator
 {
   static const char* value()
   {
-    return "Header header\n"
-"bool success\n"
+    return "Header header      # store the time just after publishing the last command\n"
+"bool success       # indicate if the service call was successful\n"
 "\n"
 "================================================================================\n"
 "MSG: std_msgs/Header\n"

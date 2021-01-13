@@ -164,10 +164,10 @@ struct Definition< ::snake_control::PublishJointCmdsRequest_<ContainerAllocator>
 {
   static const char* value()
   {
-    return "uint32 rate\n"
-"duration T\n"
-"float32[] params\n"
-"bool reset\n"
+    return "uint32 rate        # the desired rate (Hz) for publication of joint commands\n"
+"duration T         # the duration to send at the specified rate\n"
+"float32[] params   # a list of joint command parameters\n"
+"bool reset         # wheter or not to reset the state after finishing\n"
 ;
   }
 

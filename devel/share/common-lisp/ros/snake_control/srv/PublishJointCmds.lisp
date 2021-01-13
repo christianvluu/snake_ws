@@ -132,10 +132,10 @@
   "a95cf7713f743cc252b964b3db9e31ef")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<PublishJointCmds-request>)))
   "Returns full string definition for message of type '<PublishJointCmds-request>"
-  (cl:format cl:nil "uint32 rate~%duration T~%float32[] params~%bool reset~%~%~%"))
+  (cl:format cl:nil "uint32 rate        # the desired rate (Hz) for publication of joint commands~%duration T         # the duration to send at the specified rate~%float32[] params   # a list of joint command parameters~%bool reset         # wheter or not to reset the state after finishing~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'PublishJointCmds-request)))
   "Returns full string definition for message of type 'PublishJointCmds-request"
-  (cl:format cl:nil "uint32 rate~%duration T~%float32[] params~%bool reset~%~%~%"))
+  (cl:format cl:nil "uint32 rate        # the desired rate (Hz) for publication of joint commands~%duration T         # the duration to send at the specified rate~%float32[] params   # a list of joint command parameters~%bool reset         # wheter or not to reset the state after finishing~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <PublishJointCmds-request>))
   (cl:+ 0
      4
@@ -208,10 +208,10 @@
   "a95cf7713f743cc252b964b3db9e31ef")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<PublishJointCmds-response>)))
   "Returns full string definition for message of type '<PublishJointCmds-response>"
-  (cl:format cl:nil "Header header~%bool success~%~%================================================================================~%MSG: std_msgs/Header~%# Standard metadata for higher-level stamped data types.~%# This is generally used to communicate timestamped data ~%# in a particular coordinate frame.~%# ~%# sequence ID: consecutively increasing ID ~%uint32 seq~%#Two-integer timestamp that is expressed as:~%# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')~%# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')~%# time-handling sugar is provided by the client library~%time stamp~%#Frame this data is associated with~%string frame_id~%~%~%"))
+  (cl:format cl:nil "Header header      # store the time just after publishing the last command~%bool success       # indicate if the service call was successful~%~%================================================================================~%MSG: std_msgs/Header~%# Standard metadata for higher-level stamped data types.~%# This is generally used to communicate timestamped data ~%# in a particular coordinate frame.~%# ~%# sequence ID: consecutively increasing ID ~%uint32 seq~%#Two-integer timestamp that is expressed as:~%# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')~%# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')~%# time-handling sugar is provided by the client library~%time stamp~%#Frame this data is associated with~%string frame_id~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'PublishJointCmds-response)))
   "Returns full string definition for message of type 'PublishJointCmds-response"
-  (cl:format cl:nil "Header header~%bool success~%~%================================================================================~%MSG: std_msgs/Header~%# Standard metadata for higher-level stamped data types.~%# This is generally used to communicate timestamped data ~%# in a particular coordinate frame.~%# ~%# sequence ID: consecutively increasing ID ~%uint32 seq~%#Two-integer timestamp that is expressed as:~%# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')~%# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')~%# time-handling sugar is provided by the client library~%time stamp~%#Frame this data is associated with~%string frame_id~%~%~%"))
+  (cl:format cl:nil "Header header      # store the time just after publishing the last command~%bool success       # indicate if the service call was successful~%~%================================================================================~%MSG: std_msgs/Header~%# Standard metadata for higher-level stamped data types.~%# This is generally used to communicate timestamped data ~%# in a particular coordinate frame.~%# ~%# sequence ID: consecutively increasing ID ~%uint32 seq~%#Two-integer timestamp that is expressed as:~%# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')~%# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')~%# time-handling sugar is provided by the client library~%time stamp~%#Frame this data is associated with~%string frame_id~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <PublishJointCmds-response>))
   (cl:+ 0
      (roslisp-msg-protocol:serialization-length (cl:slot-value msg 'header))
