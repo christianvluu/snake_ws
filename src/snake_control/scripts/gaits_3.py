@@ -13,13 +13,14 @@ from data_processing import *
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "data_r0.065_k1.3_amp_2.05"
+FILE_NAME = "sensorefforts_data_r0.060_k1.3_amp_2.1"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
-USE_MODEL = True
-IS_CURRENTS = True
+USE_MODEL = False
+IS_CURRENTS = False
+COMPLIANCE_WITH_CURRENTS = IS_CURRENTS and False
 
 RECORD_POS = True # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
@@ -31,24 +32,28 @@ MODES TO RUN THIS FILE USING FLAGS
    - RECORD_DATA = False
    - USE_MODEL = False
    - IS_CURRENTS = False
+   - COMPLIANCE_WITH_CURRENTS = False
    - RECORD_POS = False
 2) Normal with(out) Compliance (USE currents, no logging)
    - IS_COMPLIANCE = True/False
    - RECORD_DATA = False
    - USE_MODEL = False
    - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = True
    - RECORD_POS = False
 3) Datalogging with(out) Compliance (don't currents, log efforts, theta, pos, simulated currents)
    - IS_COMPLIANCE = True/False
    - RECORD_DATA = True
    - USE_MODEL = False
    - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = False
    - RECORD_POS = True
 4) Compliance with Model (don't use currents, log efforst, theta, pos, simulated currents)
    - IS_COMPLIANCE = True
    - RECORD_DATA = False
    - USE_MODEL = True
    - IS_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = False
    - RECORD_POS = True
    
 
@@ -197,6 +202,8 @@ class SnakeControl:
                 efforts_predicted[i] = regressor.predict(np.array([[self.simulated_currents[i]]]))[0][0]
                 print("Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
             efforts_unified = changeSEAToUnified(efforts_predicted)
+        elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
+            efforts_unified = changeSEAToUnified(self.simulated_currents)
         else: 
             efforts_unified = changeSEAToUnified(self.sensor_efforts)
         if (IS_COMPLIANT):
