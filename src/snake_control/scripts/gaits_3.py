@@ -13,7 +13,7 @@ from data_processing import *
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "data_r0.065_k1.3_amp_2.05"
+FILE_NAME = "sensorefforts_data_r0.060_k1.3_amp_2.1"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
@@ -53,7 +53,7 @@ MODES TO RUN THIS FILE USING FLAGS
    - RECORD_DATA = False
    - USE_MODEL = True
    - IS_CURRENTS = True
-   - COMPLIANCE_WITH_CURRENTS = True
+   - COMPLIANCE_WITH_CURRENTS = False
    - RECORD_POS = True
    
 
@@ -63,7 +63,6 @@ MODES TO RUN THIS FILE USING FLAGS
    - RECORD_DATA = True
    - USE_MODEL = False
    - IS_CURRENTS = True
-   - COMPLIANCE_WITH_CURRENTS = False
    - RECORD_POS = True
 """
 
@@ -77,6 +76,7 @@ class SnakeControl:
 
         # use this for currentSpikeGenerator
         self.sensor_efforts = np.zeros(num_modules)
+        self.simulated_currents = np.zeros(num_modules)
         self.prev_cmd_theta = np.zeros(num_modules)
         self.curr_cmd_theta = np.zeros(num_modules)
         self.prev2curr_delta = np.zeros(num_modules)
@@ -195,14 +195,15 @@ class SnakeControl:
     
     def gait_generator(self):
         if (USE_MODEL):
-            temp = changeSEAToUnified(self.sensor_efforts)
-            print(temp[5])
-            # efforts_unified = np.zeros(self.num_modules)
+            # temp = changeSEAToUnified(self.sensor_efforts)
             efforts_predicted = np.zeros(self.num_modules)
             for i in range(0, self.num_modules):
-                efforts_predicted[i] = 0.9344 * self.sensor_efforts[i] - 0.001
+                # use the sklearn linear predictor computed in data_processing.py to calculate
+                efforts_predicted[i] = regressor.predict(np.array([[self.simulated_currents[i]]]))[0][0]
+                print("Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
             efforts_unified = changeSEAToUnified(efforts_predicted)
-            print(efforts_unified[5])
+        elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
+            efforts_unified = changeSEAToUnified(self.simulated_currents)
         else: 
             efforts_unified = changeSEAToUnified(self.sensor_efforts)
         if (IS_COMPLIANT):
@@ -229,14 +230,14 @@ class SnakeControl:
                 else:
                     self.fE.write(str(self.sensor_efforts[i]) + "\n")
 
-        if (not COMPLIANCE_WITH_CURRENTS):
-            sensor_efforts_temp = np.zeros(len(self.sensor_efforts))
-            for i in range(0, len(self.sensor_efforts)):
-                sensor_efforts_temp[i] = copy.deepcopy(self.sensor_efforts[i])
-
         if (IS_CURRENTS):
+            # make array for simulated_currents
+            for i in range(0, len(self.sensor_efforts)):
+                self.simulated_currents[i] = copy.deepcopy(self.sensor_efforts[i])
+
+            
             # add white noise
-            self.sensor_efforts += add_white_gaussian_noise(self.sensor_efforts)
+            self.simulated_currents += add_white_gaussian_noise(self.sensor_efforts)
             #print("white noise:")
             #print(self.sensor_efforts[1:5])
             
@@ -247,7 +248,7 @@ class SnakeControl:
             #     self.f.write("\n")
 
             # add low freq  noise
-            self.sensor_efforts += add_low_freq_noise(self.sensor_efforts, self.t)
+            self.simulated_currents += add_low_freq_noise(self.sensor_efforts, self.t)
             #print("low freq noise:")
             #print(self.sensor_efforts[1:5])
 
@@ -259,23 +260,19 @@ class SnakeControl:
 
             # add curr_spike
             for i in range(0, len(self.sensor_efforts)):
-                self.sensor_efforts[i] *= add_current_spike(self.prev_cmd_theta[i], self.curr_cmd_theta[i], self.spike_loop, self.prev2curr_delta, i)
+                self.simulated_currents[i] *= add_current_spike(self.prev_cmd_theta[i], self.curr_cmd_theta[i], self.spike_loop, self.prev2curr_delta, i)
             #print("spike generator:")
             # print(self.prev2curr_delta)
             #print(self.sensor_efforts[1:5])
 
             if (RECORD_DATA):
                 # self.f.write(str(self.t) + "")
-                for i in range(0, len(self.sensor_efforts)):
+                for i in range(0, len(self.simulated_currents)):
                     if (i != len(self.sensor_efforts)-1):
-                        self.fC.write(str(self.sensor_efforts[i]) + ",")
+                        self.fC.write(str(self.simulated_currents[i]) + ",")
                     else:
-                        self.fC.write(str(self.sensor_efforts[i]) + "\n")
+                        self.fC.write(str(self.simulated_currents[i]) + "\n")
                 # self.fC.write("\n")
-
-        if (not COMPLIANCE_WITH_CURRENTS):
-            for i in range(0, len(self.sensor_efforts)):
-                self.sensor_efforts[i] = copy.deepcopy(sensor_efforts_temp[i])
         
         return True
     
