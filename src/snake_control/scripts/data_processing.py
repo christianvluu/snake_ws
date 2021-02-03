@@ -38,15 +38,18 @@ plt.ylabel('Effort')
 from sklearn.preprocessing import PolynomialFeatures
 poly_regressor = PolynomialFeatures(degree = 4)
 x_poly = poly_regressor.fit_transform(x_train)
-lin_regressor_2 = LinearRegression() # apply regression on degree 8 polynomial
-lin_regressor_2.fit(x_poly, y_train)
+poly_regressor_2 = LinearRegression() # apply regression on degree 8 polynomial
+poly_regressor_2.fit(x_poly, y_train)
 
-y_pred_poly = lin_regressor_2.predict(poly_regressor.fit_transform(x_test))
+y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform(x_test))
 print(np.average(np.abs(y_test-y_pred_poly)))
+
+y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform([[0.5]]))
+print(y_pred_poly)
 
 # Visualize Polynomial Regression
 plt.scatter(x_test, y_test, color = 'red')
-plt.plot(x_test, lin_regressor_2.predict(poly_regressor.fit_transform(x_test)), color = 'blue')
+plt.plot(x_test, poly_regressor_2.predict(poly_regressor.fit_transform(x_test)), color = 'blue')
 plt.title('Polynomial Regression')
 plt.xlabel('Current')
 plt.ylabel('Effort')

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 def add_white_gaussian_noise(raw_data):
-    noise = np.random.normal(0, 0.1, len(raw_data))
+    noise = np.random.normal(0, 0.2, len(raw_data))
     return noise
 
 # Butterworth stuff:
@@ -43,10 +43,10 @@ def add_current_spike(prev_pos, curr_pos, loops, status, i):
         new_status = -1
     if new_status != status[0]:
         # add spike because the status changes here
-        noise_factor = np.random.normal(1.075, 0.1, 1)
+        noise_factor = np.random.normal(1.575, 0.1, 1)
         loops[i] = 1
     elif (0 < loops[i] and loops[i] < 10): # add the spike for 0.1 seconds
-        noise_factor = np.random.normal(1+(10-loops[i])*0.0075, 0.1, 1)
+        noise_factor = np.random.normal(1+(10-loops[i])*0.0575, 0.1, 1)
         loops[i] += 1
     else:
         noise_factor = np.ones(1) # don't add noise here

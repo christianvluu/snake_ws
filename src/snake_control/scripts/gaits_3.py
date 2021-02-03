@@ -13,16 +13,17 @@ from data_processing import *
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "sensorefforts_data_r0.060_k1.3_amp_2.1"
+FILE_NAME = "sklearnpolynomial_noise0.2_spike1.575_data_r0.060_k1.3_amp_2.1"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
 USE_MODEL = True
+MODEL = 'polynomial' # "polynomial" or "linear"
 IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
-RECORD_POS = False # record height data for graphs
+RECORD_POS = True # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 
 """
@@ -199,8 +200,12 @@ class SnakeControl:
             efforts_predicted = np.zeros(self.num_modules)
             for i in range(0, self.num_modules):
                 # use the sklearn linear predictor computed in data_processing.py to calculate
-                efforts_predicted[i] = regressor.predict(np.array([[self.simulated_currents[i]]]))[0][0]
-                print("Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                if (MODEL == "linear"):
+                    efforts_predicted[i] = lin_regressor.predict(np.array([[self.simulated_currents[i]]]))[0][0]
+                    print("linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                if (MODEL == "polynomial"):
+                    efforts_predicted[i] = poly_regressor_2.predict(poly_regressor.fit_transform([[self.simulated_currents[i]]]))
+                    print("polynomial Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
             efforts_unified = changeSEAToUnified(efforts_predicted)
         elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
             efforts_unified = changeSEAToUnified(self.simulated_currents)
