@@ -17,12 +17,12 @@ FILE_NAME = "data_r0.065_k1.3_amp_2.05"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
-RECORD_DATA = True # to record all data, IS_CURRENT also needs to be True
-USE_MODEL = False
+RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
+USE_MODEL = True
 IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
-RECORD_POS = True # record height data for graphs
+RECORD_POS = False # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 
 """
