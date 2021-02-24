@@ -24,7 +24,7 @@ lin_regressor = LinearRegression()
 lin_regressor.fit(x_train, y_train)
 
 y_pred_lin = lin_regressor.predict(x_test)
-print(np.average(np.abs(y_test-y_pred_lin)))
+# print(np.average(np.abs(y_test-y_pred_lin)))
 
 # Visualize Linear Regression
 plt.scatter(x_test, y_test, color = 'red')
@@ -42,10 +42,10 @@ poly_regressor_2 = LinearRegression() # apply regression on degree 8 polynomial
 poly_regressor_2.fit(x_poly, y_train)
 
 y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform(x_test))
-print(np.average(np.abs(y_test-y_pred_poly)))
+# print(np.average(np.abs(y_test-y_pred_poly)))
 
 y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform([[0.5]]))
-print(y_pred_poly)
+# print(y_pred_poly)
 
 # Visualize Polynomial Regression
 plt.scatter(x_test, y_test, color = 'red')
@@ -54,3 +54,16 @@ plt.title('Polynomial Regression')
 plt.xlabel('Current')
 plt.ylabel('Effort')
 # plt.show()
+
+
+
+# NEW DATA
+data = pd.read_csv("/home/christianluu/snake_ws/data/module7.csv")
+x = data.iloc[:,:-1].values # x is the currents
+y = data.iloc[:,-1].values # y is efforts to be predicted
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2)
+
+# MULTIPLE LINEAR REGRESSION
+multi_lin_regressor = LinearRegression()
+multi_lin_regressor.fit(x_train, y_train)

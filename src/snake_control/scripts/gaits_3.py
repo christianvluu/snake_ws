@@ -19,11 +19,11 @@ FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
 USE_MODEL = True
-MODEL = 'polynomial' # "polynomial" or "linear"
+MODEL = 'multiple_linear' # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
 IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
-RECORD_POS = True # record height data for graphs
+RECORD_POS = False # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 
 """
@@ -114,6 +114,8 @@ class SnakeControl:
         self.vel = 0
         self.A = 0.3 # amplitude used for rolling
 
+        self.current_history = np.zeros((16, 5))
+
         self.const = {
             "l": 0.07,
             "Md": 0.1,
@@ -166,11 +168,19 @@ class SnakeControl:
             if (not self.isPaused):
                 self.t += dt # keep track of time
                 self.gait_caller()
+                self.update_current_history()
                 # MORE STUFF HERE TO LOOP
                 #print(np.average(self.sensor_efforts))
                 # self.call_IMU()
             rate.sleep()
-    
+
+    def update_current_history(self):
+        time_steps = 5
+        for i in range(0, self.num_modules):
+            for ts in range(0, time_steps-1):
+                self.current_history[i][ts] = self.current_history[i][ts+1]
+            self.current_history[i][ts-1] = self.simulated_currents[i]
+
     def gait_caller(self): # function to assign commands, gets called once per increment of self.dt
         next_theta = self.gait_generator()
         if (RECORD_DATA):
@@ -206,6 +216,10 @@ class SnakeControl:
                 if (MODEL == "polynomial"):
                     efforts_predicted[i] = poly_regressor_2.predict(poly_regressor.fit_transform([[self.simulated_currents[i]]]))
                     print("polynomial Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                if (MODEL == "multiple_linear"):
+                    efforts_predicted[i] = multi_lin_regressor.predict([self.current_history[i]])[0]
+                if (MODEL == "multiple_polynomial"):
+                    efforts_predicted[i] = multi_poly_regressor.predict([self.current_history[i]])[0]
             efforts_unified = changeSEAToUnified(efforts_predicted)
         elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
             efforts_unified = changeSEAToUnified(self.simulated_currents)
