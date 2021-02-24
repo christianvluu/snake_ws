@@ -13,7 +13,7 @@ from data_processing import *
 
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "sklearnpolynomial_noise0.2_spike1.575_data_r0.060_k1.3_amp_2.1"
+FILE_NAME = "sklearnmultilinear_noise0.2_spike1.575_data_r0.060_k1.3_amp_2.1"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
@@ -23,7 +23,7 @@ MODEL = 'multiple_linear' # "polynomial" or "linear" or "multiple_linear" or "mu
 IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
-RECORD_POS = False # record height data for graphs
+RECORD_POS = True # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 
 """
@@ -142,7 +142,7 @@ class SnakeControl:
 
         if (RECORD_POS):
             self.fP = open(FILE_POS, "a+")
-            self.fP.write("time,index,height\n")
+            self.fP.write("time index height\n")
             # self.fP.write("l,Md,Bd,Kd,k,amp,w_t\n")
             # self.fP.write(str(self.const["l"]) + "," + str(self.const["Md"]) + "," + str(self.const["Bd"]) + "," + str(self.const["Kd"]) + "," + str(self.const["k"]) + "," + str(self.const["target_amp"]) + "," +  str(self.const["w_t"]) + "\n")
 
@@ -211,13 +211,14 @@ class SnakeControl:
             for i in range(0, self.num_modules):
                 # use the sklearn linear predictor computed in data_processing.py to calculate
                 if (MODEL == "linear"):
-                    efforts_predicted[i] = lin_regressor.predict(np.array([[self.simulated_currents[i]]]))[0][0]
+                    efforts_predicted[i] = lin_regressor.predict(np.array([[self.simulated_currents[i]]]))[0]
                     print("linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "polynomial"):
                     efforts_predicted[i] = poly_regressor_2.predict(poly_regressor.fit_transform([[self.simulated_currents[i]]]))
                     print("polynomial Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "multiple_linear"):
                     efforts_predicted[i] = multi_lin_regressor.predict([self.current_history[i]])[0]
+                    print("multi_linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "multiple_polynomial"):
                     efforts_predicted[i] = multi_poly_regressor.predict([self.current_history[i]])[0]
             efforts_unified = changeSEAToUnified(efforts_predicted)
