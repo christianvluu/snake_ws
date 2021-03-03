@@ -10,17 +10,18 @@ import copy
 from noise import *
 from data_processing import *
 
-
+###### NOTE THAT 39s timer is on ###
+TIMER = True # 39 seconds
 IS_COMPLIANT = True # run compliant algorithm?
-FILE_LOC = '/home/christianluu/snake_ws/data/'
-FILE_NAME = "sklearnmultilinear_noise0.2_spike1.575_data_r0.060_k1.3_amp_2.1"
+FILE_LOC = '/home/christianluu/snake_ws/data/hand_tuned/'
+FILE_NAME = "realefforts3"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
-USE_MODEL = True
-MODEL = 'multiple_linear' # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
-IS_CURRENTS = True
+USE_MODEL = False
+MODEL = "multiple_linear" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
+IS_CURRENTS = False
 COMPLIANCE_WITH_CURRENTS = False
 
 RECORD_POS = True # record height data for graphs
@@ -118,11 +119,11 @@ class SnakeControl:
 
         self.const = {
             "l": 0.07,
-            "Md": 0.1,
+            "Md": 0.07,
             "Bd": 2,
             "Kd": 1.5,
             "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 2.1, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "target_amp": 2.7, # 1.8 is good; max for NO COMPLIANCE is 1.55
             "w_t": 4 # speed of rolling
         }
         if (RECORD_DATA): 
@@ -172,6 +173,9 @@ class SnakeControl:
                 # MORE STUFF HERE TO LOOP
                 #print(np.average(self.sensor_efforts))
                 # self.call_IMU()
+                if (self.t > 39 and TIMER):
+                    print("pos Z: ", self.pos_z[2])
+                    exit()
             rate.sleep()
 
     def update_current_history(self):
@@ -199,7 +203,7 @@ class SnakeControl:
         
         
         if (RECORD_POS):
-            print("pos Z: ", self.pos_z[2])
+            # print("pos Z: ", self.pos_z[2])
             self.fP.write(str(self.t) + " " + "0 " + str(self.pos_z[2]) + "\n")
 
         #print(np.max(next_theta))
@@ -212,19 +216,25 @@ class SnakeControl:
                 # use the sklearn linear predictor computed in data_processing.py to calculate
                 if (MODEL == "linear"):
                     efforts_predicted[i] = lin_regressor.predict(np.array([[self.simulated_currents[i]]]))[0]
-                    print("linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                    #print("linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "polynomial"):
                     efforts_predicted[i] = poly_regressor_2.predict(poly_regressor.fit_transform([[self.simulated_currents[i]]]))
-                    print("polynomial Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                    #print("polynomial Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "multiple_linear"):
                     efforts_predicted[i] = multi_lin_regressor.predict([self.current_history[i]])[0]
-                    print("multi_linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
+                    #print("multi_linear Prediction: ", efforts_predicted[i], " vs Real: ", self.sensor_efforts[i])
                 if (MODEL == "multiple_polynomial"):
                     efforts_predicted[i] = multi_poly_regressor.predict([self.current_history[i]])[0]
             efforts_unified = changeSEAToUnified(efforts_predicted)
         elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
             efforts_unified = changeSEAToUnified(self.simulated_currents)
-        else: 
+        else:
+            # slow down so that it'll be the same as USE_MODEL
+            # efforts_predicted = np.zeros(self.num_modules)
+            # for i in range(0, self.num_modules):
+            #     efforts_predicted[i] = multi_lin_regressor.predict([self.current_history[i]])[0]
+            # slow down so that it'll be the same as USE_MODEL
+            
             efforts_unified = changeSEAToUnified(self.sensor_efforts)
         if (IS_COMPLIANT):
             self.A = generate_shape_parameter(self.A, self.vel, efforts_unified,
@@ -381,7 +391,7 @@ def generate_shape_parameter(amp, vel, efforts, time, dt, const): # efforts are 
     vel = (tau_J - Bd*vel - Kd*(amp-target_amp))*(dt/Md) + vel
     new_amp = vel*dt + amp
     # print "time:", time, "amplitude:", new_amp, " vel:", vel, "tau_J:", tau_J, "efforts:", efforts
-    print "time: ", time, "shape parameter:", amp
+    # ##### print "time: ", time, "shape parameter:", amp
     # print "efforts: ", efforts
     return new_amp
 
