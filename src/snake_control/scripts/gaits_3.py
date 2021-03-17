@@ -13,15 +13,15 @@ from data_processing import *
 ###### NOTE THAT 39s timer is on ###
 TIMER = True # 39 seconds
 IS_COMPLIANT = True # run compliant algorithm?
-FILE_LOC = '/home/christianluu/snake_ws/data/hand_tuned/'
-FILE_NAME = "realefforts3"
+FILE_LOC = '/home/christianluu/snake_ws/data/all_the_same/'
+FILE_NAME = "radius_0.060_multipoly_1"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
-USE_MODEL = False
-MODEL = "multiple_linear" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
-IS_CURRENTS = False
+USE_MODEL = True
+MODEL = "multiple_poly" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
+IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
 RECORD_POS = True # record height data for graphs
@@ -118,11 +118,11 @@ class SnakeControl:
 
         self.const = {
             "l": 0.07,
-            "Md": 0.07,
+            "Md": 0.1,
             "Bd": 2,
             "Kd": 1.5,
             "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
-            "target_amp": 2.7, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "target_amp": 2.1, # 1.8 is good; max for NO COMPLIANCE is 1.55
             "w_t": 4 # speed of rolling
         }
         if (RECORD_DATA): 
@@ -168,6 +168,7 @@ class SnakeControl:
                 pub[joint].publish(next_command[joint])
             if (not self.isPaused):
                 self.t =  rospy.get_time() - self.start_time# keep track of time
+                print("time: ", self.t)
                 self.gait_caller()
                 self.update_current_history()
                 # MORE STUFF HERE TO LOOP
@@ -210,6 +211,7 @@ class SnakeControl:
     
     def gait_generator(self):
         if (USE_MODEL):
+            # print("using currents going into regression model for compliance")
             # temp = changeSEAToUnified(self.sensor_efforts)
             efforts_predicted = np.zeros(self.num_modules)
             for i in range(0, self.num_modules):
@@ -227,6 +229,7 @@ class SnakeControl:
                     efforts_predicted[i] = multi_poly_regressor.predict([self.current_history[i]])[0]
             efforts_unified = changeSEAToUnified(efforts_predicted)
         elif (IS_CURRENTS and COMPLIANCE_WITH_CURRENTS):
+            print("using raw currents as torque proxy")
             efforts_unified = changeSEAToUnified(self.simulated_currents)
         else:
             # slow down so that it'll be the same as USE_MODEL
@@ -234,12 +237,14 @@ class SnakeControl:
             # for i in range(0, self.num_modules):
             #     efforts_predicted[i] = multi_lin_regressor.predict([self.current_history[i]])[0]
             # slow down so that it'll be the same as USE_MODEL
-            
+            # print("not using simulated currents, using actual efforts")
             efforts_unified = changeSEAToUnified(self.sensor_efforts)
         if (IS_COMPLIANT):
+            # print("using compliance")
             self.A = generate_shape_parameter(self.A, self.vel, efforts_unified,
                                             self.t, self.dt, self.const)
         else:
+            # print("not using compliance")
             self.A = self.const["target_amp"]
         theta = generate_serpernoid_curve(self.A, self.t, self.const,
                                        self.num_modules)

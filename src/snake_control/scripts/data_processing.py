@@ -6,7 +6,7 @@ import pandas as pd
 
 np.random.seed(12345)
 
-data = pd.read_csv("/home/christianluu/snake_ws/data/module7.csv")
+data = pd.read_csv("/home/christianluu/snake_ws/data/final_calib.csv")
 x = data.iloc[:,-2:-1].values # x is the currents
 y = data.iloc[:,-1].values # y is efforts to be predicted
 

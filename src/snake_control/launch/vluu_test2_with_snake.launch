@@ -50,7 +50,7 @@
   <!-- call with gait:=true to start walking controller node with gazebo -->
   <arg name="gait" default="true" />
   <group if="$(arg gait)">
-    <node name="snake_controller" pkg="snake_control" type="gaits_2.py" />
+    <node name="snake_controller" pkg="snake_control" type="gaits_3.py" />
   </group>
 
   <!-- call with jnt_srvr:=true to start joint state server node with gazebo -->

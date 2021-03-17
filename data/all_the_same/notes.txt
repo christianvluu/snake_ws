@@ -1,0 +1,15 @@
+Constants: FOR R = 0.60-->0.70
+
+        self.const = {
+            "l": 0.07,
+            "Md": 0.1,
+            "Bd": 2,
+            "Kd": 1.5,
+            "k": 1.3, # 1.3 is good shape value; ALTER THIS to change how the snake wraps around pole
+            "target_amp": 2.1, # 1.8 is good; max for NO COMPLIANCE is 1.55
+            "w_t": 4 # speed of rolling
+        }
+
+
+noise0.2_spike1.575
+
