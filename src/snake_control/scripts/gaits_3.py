@@ -26,7 +26,6 @@ COMPLIANCE_WITH_CURRENTS = False
 
 RECORD_POS = True # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
-
 """
 MODES TO RUN THIS FILE USING FLAGS
 1) Normal with(out) Compliance (don't use currents, no logging)
@@ -160,6 +159,7 @@ class SnakeControl:
                                             + cont_str + '/command',
                                             Float64, queue_size=10)
         rate = rospy.Rate(self.hz)
+        self.start_time = rospy.get_time()
         self.curr_cmds = JointCmds(num_modules=self.num_modules)
         self.next_cmds = JointCmds(num_modules=self.num_modules)
         while not rospy.is_shutdown():
@@ -167,7 +167,7 @@ class SnakeControl:
             for joint in self.curr_cmds.jnt_cmd_dict.keys():
                 pub[joint].publish(next_command[joint])
             if (not self.isPaused):
-                self.t += dt # keep track of time
+                self.t =  rospy.get_time() - self.start_time# keep track of time
                 self.gait_caller()
                 self.update_current_history()
                 # MORE STUFF HERE TO LOOP
@@ -476,7 +476,6 @@ class JointCmds: # dictionary mapping to joint position values
     
     def get_next_cmd(self):
         return self.jnt_cmd_dict
-
 
 if __name__ == '__main__':
     rospy.init_node("main_control")

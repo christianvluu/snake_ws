@@ -20,7 +20,7 @@ lin_regressor = LinearRegression()
 lin_regressor.fit(x_train, y_train)
 
 y_pred_lin = lin_regressor.predict(x_test)
-print("linear regression", np.average(y_test-y_pred_lin))
+# print("linear regression", np.average(y_test-y_pred_lin))
 
 # # Visualize Linear Regression
 plt.scatter(x_test, y_test, color = 'red')
@@ -38,7 +38,7 @@ poly_regressor_2 = LinearRegression() # apply regression on degree 8 polynomial
 poly_regressor_2.fit(x_poly, y_train)
 
 y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform(x_test))
-print("poly regression", np.average(y_test-y_pred_poly))
+# print("poly regression", np.average(y_test-y_pred_poly))
 
 y_pred_poly = poly_regressor_2.predict(poly_regressor.fit_transform([[0.5]]))
 # print(y_pred_poly)
@@ -50,7 +50,7 @@ plt.title('Polynomial Regression')
 plt.xlabel('Current')
 plt.ylabel('Effort')
 # plt.show()
-print("xtest" , x_test)
+# print("xtest" , x_test)
 
 
 
@@ -66,14 +66,14 @@ multi_lin_regressor = LinearRegression()
 multi_lin_regressor.fit(x_train, y_train)
 
 y_pred_multi_lin = multi_lin_regressor.predict(x_test)
-print("multiple linear", np.average(y_test-y_pred_multi_lin))
+# print("multiple linear", np.average(y_test-y_pred_multi_lin))
 
 x_test_last_col = np.transpose(x_test[:,-1])
-print("x_testlastcol: ", x_test_last_col)
+# print("x_testlastcol: ", x_test_last_col)
 # Visualize MULIPLE linear regression
 plt.scatter(x_test_last_col, y_test, color = 'red')
 plt.plot(x_test_last_col, multi_lin_regressor.predict(x_test), color = 'blue')
 plt.title('Multiple Linear Regression')
 plt.xlabel('Current')
 plt.ylabel('Effort (most recent value)')
-plt.show()
+# plt.show()
