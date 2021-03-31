@@ -14,13 +14,13 @@ from data_processing import *
 TIMER = True # 39 seconds
 IS_COMPLIANT = True # run compliant algorithm?
 FILE_LOC = '/home/christianluu/snake_ws/data/all_the_same/'
-FILE_NAME = "radius_0.060_multipoly_1"
+FILE_NAME = "radius_0.060_polynomial_2"
 FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
 USE_MODEL = True
-MODEL = "multiple_poly" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
+MODEL = "polynomial" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
 IS_CURRENTS = True
 COMPLIANCE_WITH_CURRENTS = False
 
