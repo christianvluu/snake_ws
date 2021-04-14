@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 def add_white_gaussian_noise(raw_data):
-    noise = np.random.normal(0, 0.2, len(raw_data))
+    noise = np.random.normal(0, 2, len(raw_data)) # originally is 0.2
     return noise
 
 # Butterworth stuff:

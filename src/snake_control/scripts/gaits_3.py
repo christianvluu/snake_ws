@@ -19,12 +19,12 @@ FILE_EFFORTS = FILE_LOC + FILE_NAME + "_efforts.txt"
 FILE_CURRENTS = FILE_LOC + FILE_NAME + "_currents.txt"
 FILE_THETAS = FILE_LOC + FILE_NAME + "_thetas.txt"
 RECORD_DATA = False # to record all data, IS_CURRENT also needs to be True
-USE_MODEL = True
-MODEL = "polynomial" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
+USE_MODEL = False
+MODEL = "linear" # "polynomial" or "linear" or "multiple_linear" or "multiple_poly"
 IS_CURRENTS = True
-COMPLIANCE_WITH_CURRENTS = False
+COMPLIANCE_WITH_CURRENTS = True
 
-RECORD_POS = True # record height data for graphs
+RECORD_POS = False # record height data for graphs
 FILE_POS = FILE_LOC + FILE_NAME + "_pos.txt"
 """
 MODES TO RUN THIS FILE USING FLAGS
@@ -273,6 +273,8 @@ class SnakeControl:
             
             # add white noise
             self.simulated_currents += add_white_gaussian_noise(self.sensor_efforts)
+            print("actual efforts: ", self.sensor_efforts[6])
+            print("diff in noise: ", self.sensor_efforts[6]-self.simulated_currents[6])
             #print("white noise:")
             #print(self.sensor_efforts[1:5])
             
